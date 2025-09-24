@@ -36,7 +36,6 @@ function wordFrequency() {
   }
 
   // Find most and least recurring words
-  let mostWord = null;
   let mostCount = -Infinity, leastCount = Infinity;
   for (const count of Object.values(freq)) {
     if (count > mostCount) mostCount = count;
