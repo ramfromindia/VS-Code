@@ -29,8 +29,8 @@ function wordFrequency() {
     myFreqCalc1.textContent = "No words found.";
     return;
   }
-  const wordLength = words.length;
-  for (let i = 0; i < wordLength; i++) {
+  const wordsLength = words.length;
+  for (let i = 0; i < wordsLength; i++) {
     const word = words[i];
     freq[word] = (freq[word] || 0) + 1;
   }
