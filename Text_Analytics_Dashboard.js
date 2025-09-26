@@ -35,18 +35,22 @@ function wordFrequency() {
     freq[word] = (freq[word] || 0) + 1;
   }
 
-  // Find most and least recurring words
+  // Find most and least recurring words and collect them in one pass
   let mostCount = -Infinity, leastCount = Infinity;
-  for (const count of Object.values(freq)) {
-    if (count > mostCount) mostCount = count;
-    if (count < leastCount) leastCount = count;
-  }
-  // Collect all words with most and least count
-  const mostWords = [];
-  const leastWords = [];
+  let mostWords = [], leastWords = [];
   for (const [word, count] of Object.entries(freq)) {
-    if (count === mostCount) mostWords.push(word);
-    if (count === leastCount) leastWords.push(word);
+    if (count > mostCount) {
+      mostCount = count;
+      mostWords = [word];
+    } else if (count === mostCount) {
+      mostWords.push(word);
+    }
+    if (count < leastCount) {
+      leastCount = count;
+      leastWords = [word];
+    } else if (count === leastCount) {
+      leastWords.push(word);
+    }
   }
 
   // Display results
