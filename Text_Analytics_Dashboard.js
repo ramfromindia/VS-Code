@@ -1,57 +1,4 @@
-// Optimized word frequency function for large scale data sets
-// Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
-function wordFrequencyOptimized() {
-  // Get input and result display elements
-  const myInput = document.getElementById("myInput").value;
-  const myFreqCalc2 = document.getElementById("myFreqCalc2");
 
-  // Use Map for efficient key-value storage
-  const freqMap = new Map();
-
-  // Process input in chunks for large data (simulate chunking for demo)
-  // For real streaming, use FileReader or streams
-  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
-  if (!words) {
-    myFreqCalc2.textContent = "No words found.";
-    return;
-  }
-
-  // Count word frequencies
-  for (const word of words) {
-    freqMap.set(word, (freqMap.get(word) || 0) + 1);
-  }
-
-  // Track most and least frequent words in one pass
-  let mostCount = -Infinity, leastCount = Infinity;
-  let mostWords = [], leastWords = [];
-  for (const [word, count] of freqMap.entries()) {
-    // Most frequent
-    if (count > mostCount) {
-      mostCount = count;
-      mostWords = [word];
-    } else if (count === mostCount) {
-      mostWords.push(word);
-    }
-    // Least frequent
-    if (count < leastCount) {
-      leastCount = count;
-      leastWords = [word];
-    } else if (count === leastCount) {
-      leastWords.push(word);
-    }
-  }
-
-  // Prepare result string
-  let result = "Optimized Word Frequency:\n";
-  // Convert Map to object for display
-  result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
-  result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-  result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-  myFreqCalc2.textContent = result;
-}
-
-// Add event listener for optimized function button
-document.getElementById("myBtnOptimized").addEventListener("click", wordFrequencyOptimized);
 // Project Description:
 // Text Analytics Dashboard
 // Build a web-based dashboard that allows users to input a block of text and receive various analytics and insights.
@@ -113,3 +60,58 @@ function wordFrequency() {
   result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
   myFreqCalc1.textContent = result;
 }
+
+// Optimized word frequency function for large scale data sets
+// Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
+function wordFrequencyOptimized() {
+  // Get input and result display elements
+  const myInput = document.getElementById("myInput").value;
+  const myFreqCalc2 = document.getElementById("myFreqCalc2");
+
+  // Use Map for efficient key-value storage
+  const freqMap = new Map();
+
+  // Process input in chunks for large data (simulate chunking for demo)
+  // For real streaming, use FileReader or streams
+  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
+  if (!words) {
+    myFreqCalc2.textContent = "No words found.";
+    return;
+  }
+
+  // Count word frequencies
+  for (const word of words) {
+    freqMap.set(word, (freqMap.get(word) || 0) + 1);
+  }
+
+  // Track most and least frequent words in one pass
+  let mostCount = -Infinity, leastCount = Infinity;
+  let mostWords = [], leastWords = [];
+  for (const [word, count] of freqMap.entries()) {
+    // Most frequent
+    if (count > mostCount) {
+      mostCount = count;
+      mostWords = [word];
+    } else if (count === mostCount) {
+      mostWords.push(word);
+    }
+    // Least frequent
+    if (count < leastCount) {
+      leastCount = count;
+      leastWords = [word];
+    } else if (count === leastCount) {
+      leastWords.push(word);
+    }
+  }
+
+  // Prepare result string
+  let result = "Optimized Word Frequency:\n";
+  // Convert Map to object for display
+  result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
+  result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
+  result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+  myFreqCalc2.textContent = result;
+}
+
+// Add event listener for optimized function button
+document.getElementById("myBtnOptimized").addEventListener("click", wordFrequencyOptimized);
