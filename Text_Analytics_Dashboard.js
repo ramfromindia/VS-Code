@@ -74,58 +74,74 @@ function wordFrequencyOptimized() {
     return;
   }
 
-  // Create a new Web Worker instance, pointing to the worker script
-  const worker = new Worker("wordFrequencyWorker.js");
+  // Split input into words
+  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
+  if (!words) {
+    myFreqCalc2.textContent = "No words found.";
+    return;
+  }
 
-  // Send the input text to the worker for processing
-  worker.postMessage(myInput);
+  // Chunk size for processing
+  const CHUNK_SIZE = 10000;
+  let chunkStart = 0;
+  let freqMap = new Map();
 
-  // Listen for messages (results) from the worker
-  worker.onmessage = function(e) {
-    // The worker returns an object with word frequencies
-    const freq = e.data;
-
-    // Find most and least recurring words in the result
-    let mostCount = -Infinity, leastCount = Infinity;
-    let mostWords = [], leastWords = [];
-    // Iterate over each word and its count
-    for (const [word, count] of Object.entries(freq)) {
-      // Track most frequent word(s)
-      if (count > mostCount) {
-        mostCount = count;
-        mostWords = [word];
-      } else if (count === mostCount) {
-        mostWords.push(word);
-      }
-      // Track least frequent word(s)
-      if (count < leastCount) {
-        leastCount = count;
-        leastWords = [word];
-      } else if (count === leastCount) {
-        leastWords.push(word);
-      }
+  // Helper to merge frequency maps
+  function mergeMaps(map1, map2) {
+    for (const [word, count] of map2.entries()) {
+      map1.set(word, (map1.get(word) || 0) + count);
     }
+  }
 
-    // Prepare the result string for display
-    let result = "Optimized Word Frequency:\n";
-    // Show the frequency object as formatted JSON
-    result += JSON.stringify(freq, null, 2);
-    // Show most and least recurring words
-    result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-    result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+  // Function to process next chunk using the worker
+  function processNextChunk() {
+    if (chunkStart >= words.length) {
+      // All chunks processed, display results
+      let mostCount = -Infinity, leastCount = Infinity;
+      let mostWords = [], leastWords = [];
+      for (const [word, count] of freqMap.entries()) {
+        if (count > mostCount) {
+          mostCount = count;
+          mostWords = [word];
+        } else if (count === mostCount) {
+          mostWords.push(word);
+        }
+        if (count < leastCount) {
+          leastCount = count;
+          leastWords = [word];
+        } else if (count === leastCount) {
+          leastWords.push(word);
+        }
+      }
+      let result = "Optimized Word Frequency:\n";
+      result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
+      result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
+      result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+      myFreqCalc2.textContent = result;
+      return;
+    }
+    // Prepare chunk
+    const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
+    chunkStart += CHUNK_SIZE;
+    const worker = new Worker("wordFrequencyWorker.js");
+    worker.postMessage(chunk);
+    worker.onmessage = function(e) {
+      // Merge chunk result into main freqMap
+      const chunkMapArr = e.data; // Array of [word, count] pairs
+      const chunkMap = new Map(chunkMapArr);
+      mergeMaps(freqMap, chunkMap);
+      worker.terminate();
+      // Process next chunk
+      setTimeout(processNextChunk, 0);
+    };
+    worker.onerror = function(error) {
+      myFreqCalc2.textContent = "Worker error: " + error.message;
+      worker.terminate();
+    };
+  }
 
-    // Display the result in the dashboard
-    myFreqCalc2.textContent = result;
-
-    // Terminate the worker to free resources
-    worker.terminate();
-  };
-
-  // Handle any errors that occur in the worker
-  worker.onerror = function(error) {
-    myFreqCalc2.textContent = "Worker error: " + error.message;
-    worker.terminate();
-  };
+  // Start processing chunks
+  processNextChunk();
 // ...existing code...
 }
 
