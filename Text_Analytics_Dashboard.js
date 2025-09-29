@@ -64,71 +64,45 @@ function wordFrequency() {
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
 function wordFrequencyOptimized() {
-  // Get input and result display elements
   const myInput = document.getElementById("myInput").value;
   const myFreqCalc2 = document.getElementById("myFreqCalc2");
-
-  // Use Map for efficient key-value storage
-  const freqMap = new Map();
-
-  // --- Chunked Data Processing for Robustness and Memory Optimization ---
-  // Instead of processing all words at once, process in manageable chunks
-  // This is especially useful for very large text inputs
-  const CHUNK_SIZE = 10000; // Number of words per chunk (tune as needed)
-  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
-  if (!words) {
+  if (!myInput.trim()) {
     myFreqCalc2.textContent = "No words found.";
     return;
   }
-
-  // Process words in chunks
-  for (let i = 0; i < words.length; i += CHUNK_SIZE) {
-    // Get a chunk of words
-    const chunk = words.slice(i, i + CHUNK_SIZE);
-    // Process each word in the chunk
-    for (const word of chunk) {
-      freqMap.set(word, (freqMap.get(word) || 0) + 1);
+  const worker = new Worker("wordFrequencyWorker.js");
+  worker.postMessage(myInput);
+  worker.onmessage = function(e) {
+    const freq = e.data;
+    // Find most and least recurring words
+    let mostCount = -Infinity, leastCount = Infinity;
+    let mostWords = [], leastWords = [];
+    for (const [word, count] of Object.entries(freq)) {
+      if (count > mostCount) {
+        mostCount = count;
+        mostWords = [word];
+      } else if (count === mostCount) {
+        mostWords.push(word);
+      }
+      if (count < leastCount) {
+        leastCount = count;
+        leastWords = [word];
+      } else if (count === leastCount) {
+        leastWords.push(word);
+      }
     }
-    // Optionally, you could yield control to the UI here for very large data sets
-    // using setTimeout or requestIdleCallback for true async chunking
-    // This demo processes synchronously for simplicity
-  }
-
-  // Inline comments:
-  // - CHUNK_SIZE controls how many words are processed at a time
-  // - This approach reduces peak memory usage and can keep the UI responsive
-  // - For even larger data, consider async chunking or Web Workers
-
-  // Track most and least frequent words in one pass
-  let mostCount = -Infinity, leastCount = Infinity;
-  let mostWords = [], leastWords = [];
-  for (const [word, count] of freqMap.entries()) {
-    // Most frequent
-    if (count > mostCount) {
-      mostCount = count;
-      mostWords = [word];
-    } else if (count === mostCount) {
-      mostWords.push(word);
-    }
-    // Least frequent
-    if (count < leastCount) {
-      leastCount = count;
-      leastWords = [word];
-    } else if (count === leastCount) {
-      leastWords.push(word);
-    }
-  }
-  // Inline comments:
-  // - This single pass efficiently finds all most/least frequent words
-  // - No need for extra memory or multiple passes
-
-  // Prepare result string
-  let result = "Optimized Word Frequency:\n";
-  // Convert Map to object for display
-  result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
-  result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-  result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-  myFreqCalc2.textContent = result;
+    let result = "Optimized Word Frequency:\n";
+    result += JSON.stringify(freq, null, 2);
+    result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
+    result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+    myFreqCalc2.textContent = result;
+    worker.terminate();
+  };
+  worker.onerror = function(error) {
+    myFreqCalc2.textContent = "Worker error: " + error.message;
+    worker.terminate();
+  };
+// ...existing code...
 }
 
 // Add event listener for optimized function button
