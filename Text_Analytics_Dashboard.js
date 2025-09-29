@@ -64,26 +64,40 @@ function wordFrequency() {
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
 function wordFrequencyOptimized() {
+  // Get the input text and result display element
   const myInput = document.getElementById("myInput").value;
   const myFreqCalc2 = document.getElementById("myFreqCalc2");
+
+  // If input is empty or only whitespace, show message and exit
   if (!myInput.trim()) {
     myFreqCalc2.textContent = "No words found.";
     return;
   }
+
+  // Create a new Web Worker instance, pointing to the worker script
   const worker = new Worker("wordFrequencyWorker.js");
+
+  // Send the input text to the worker for processing
   worker.postMessage(myInput);
+
+  // Listen for messages (results) from the worker
   worker.onmessage = function(e) {
+    // The worker returns an object with word frequencies
     const freq = e.data;
-    // Find most and least recurring words
+
+    // Find most and least recurring words in the result
     let mostCount = -Infinity, leastCount = Infinity;
     let mostWords = [], leastWords = [];
+    // Iterate over each word and its count
     for (const [word, count] of Object.entries(freq)) {
+      // Track most frequent word(s)
       if (count > mostCount) {
         mostCount = count;
         mostWords = [word];
       } else if (count === mostCount) {
         mostWords.push(word);
       }
+      // Track least frequent word(s)
       if (count < leastCount) {
         leastCount = count;
         leastWords = [word];
@@ -91,13 +105,23 @@ function wordFrequencyOptimized() {
         leastWords.push(word);
       }
     }
+
+    // Prepare the result string for display
     let result = "Optimized Word Frequency:\n";
+    // Show the frequency object as formatted JSON
     result += JSON.stringify(freq, null, 2);
+    // Show most and least recurring words
     result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
     result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+
+    // Display the result in the dashboard
     myFreqCalc2.textContent = result;
+
+    // Terminate the worker to free resources
     worker.terminate();
   };
+
+  // Handle any errors that occur in the worker
   worker.onerror = function(error) {
     myFreqCalc2.textContent = "Worker error: " + error.message;
     worker.terminate();
