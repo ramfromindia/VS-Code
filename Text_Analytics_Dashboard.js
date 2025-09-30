@@ -24,18 +24,18 @@
 function wordFrequency() {
   // Get the input text and result display element
   const myInput = document.getElementById("myInput").value;
-  const myFreqCalc2 = document.getElementById("myFreqCalc2");
+  const myFreqCalc = document.getElementById("myFreqCalc");
 
   // If input is empty or only whitespace, show message and exit
   if (!myInput.trim()) {
-    myFreqCalc2.textContent = "No words found.";
+    myFreqCalc.textContent = "No words found.";
     return;
   }
 
   // Split input into words
   const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
   if (!words) {
-    myFreqCalc2.textContent = "No words found.";
+    myFreqCalc.textContent = "No words found.";
     return;
   }
 
@@ -75,7 +75,7 @@ function wordFrequency() {
       result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
       result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
       result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-      myFreqCalc2.textContent = result;
+      myFreqCalc.textContent = result;
       // Remove event listener after processing is done
       const btn = document.getElementById("myBtn");
       btn.removeEventListener("click", wordFrequency);
@@ -96,7 +96,7 @@ function wordFrequency() {
       setTimeout(processNextChunk, 0);
     };
     worker.onerror = function(error) {
-      myFreqCalc2.textContent = "Worker error: " + error.message;
+      myFreqCalc.textContent = "Worker error: " + error.message;
       worker.terminate();
     };
   }
