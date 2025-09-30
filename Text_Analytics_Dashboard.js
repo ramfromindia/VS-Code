@@ -19,51 +19,9 @@
 // - Modular functions for each analytic feature
 // - Professional CSS styling
 
-document.getElementById("myBtn").addEventListener("click",wordFrequency)
-
-function wordFrequency() {
-  const myInput = document.getElementById("myInput").value;
-  const myFreqCalc1 = document.getElementById("myFreqCalc1");
-  const freq = {};
-  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
-  if (!words) {
-    myFreqCalc1.textContent = "No words found.";
-    return;
-  }
-  const wordsLength = words.length;
-  for (let i = 0; i < wordsLength; i++) {
-    const word = words[i];
-    freq[word] = (freq[word] || 0) + 1;
-  }
-
-  // Find most and least recurring words and collect them in one pass
-  let mostCount = -Infinity, leastCount = Infinity;
-  let mostWords = [], leastWords = [];
-  for (const [word, count] of Object.entries(freq)) {
-    if (count > mostCount) {
-      mostCount = count;
-      mostWords = [word];
-    } else if (count === mostCount) {
-      mostWords.push(word);
-    }
-    if (count < leastCount) {
-      leastCount = count;
-      leastWords = [word];
-    } else if (count === leastCount) {
-      leastWords.push(word);
-    }
-  }
-
-  // Display results
-  let result = "Word Frequency:\n" + JSON.stringify(freq, null, 2);
-  result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-  result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-  myFreqCalc1.textContent = result;
-}
-
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
-function wordFrequencyOptimized() {
+function wordFrequency() {
   // Get the input text and result display element
   const myInput = document.getElementById("myInput").value;
   const myFreqCalc2 = document.getElementById("myFreqCalc2");
@@ -113,11 +71,14 @@ function wordFrequencyOptimized() {
           leastWords.push(word);
         }
       }
-      let result = "Optimized Word Frequency:\n";
+      let result = "Word Frequency:\n";
       result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
       result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
       result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
       myFreqCalc2.textContent = result;
+      // Remove event listener after processing is done
+      const btn = document.getElementById("myBtn");
+      btn.removeEventListener("click", wordFrequency);
       return;
     }
     // Prepare chunk
@@ -142,8 +103,7 @@ function wordFrequencyOptimized() {
 
   // Start processing chunks
   processNextChunk();
-// ...existing code...
 }
 
 // Add event listener for optimized function button
-document.getElementById("myBtnOptimized").addEventListener("click", wordFrequencyOptimized);
+document.getElementById("myBtn").addEventListener("click", wordFrequency);
