@@ -51,8 +51,14 @@ function wordFrequency() {
     }
   }
 
-  // Function to process next chunk using the worker
+  // Create a single worker instance for all chunks (optimization)
+  const worker = new Worker("wordFrequencyWorker.js");
+  // Track if an error occurred to avoid further processing
+  let workerError = false;
+
+  // Function to process next chunk using the single worker
   function processNextChunk() {
+    if (workerError) return; // Stop if error occurred
     if (chunkStart >= words.length) {
       // All chunks processed, display results
       let mostCount = -Infinity, leastCount = Infinity;
@@ -79,29 +85,33 @@ function wordFrequency() {
       // Remove event listener after processing is done
       const btn = document.getElementById("myBtn");
       btn.removeEventListener("click", wordFrequency);
+      // Terminate the worker after all chunks are processed
+      worker.terminate();
       return;
     }
     // Prepare chunk
     const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
     chunkStart += CHUNK_SIZE;
-    const worker = new Worker("wordFrequencyWorker.js");
+    // Send chunk to the single worker
     worker.postMessage(chunk);
-    worker.onmessage = function(e) {
-      // Merge chunk result into main freqMap
-      const chunkMapArr = e.data; // Array of [word, count] pairs
-      const chunkMap = new Map(chunkMapArr);
-      mergeMaps(freqMap, chunkMap);
-      worker.terminate();
-      // Process next chunk
-      setTimeout(processNextChunk, 0);
-    };
-    worker.onerror = function(error) {
-      myFreqCalc.textContent = "Worker error: " + error.message;
-      worker.terminate();
-    };
   }
 
-  // Start processing chunks
+  // Listen for messages from the worker (reused for all chunks)
+  worker.onmessage = function(e) {
+    // Merge chunk result into main freqMap
+    const chunkMapArr = e.data; // Array of [word, count] pairs
+    const chunkMap = new Map(chunkMapArr);
+    mergeMaps(freqMap, chunkMap);
+    // Process next chunk
+    setTimeout(processNextChunk, 0);
+  };
+  worker.onerror = function(error) {
+    myFreqCalc.textContent = "Worker error: " + error.message;
+    workerError = true;
+    worker.terminate();
+  };
+
+  // Start processing chunks with the single worker
   processNextChunk();
 }
 
