@@ -75,6 +75,9 @@ function wordFrequency() {
   const CHUNK_SIZE = 10000;
   let chunkStart = 0;
   let freqMap = new Map();
+  let workerError = false;
+  // Create a single worker instance for all chunks (optimization)
+  const worker = createWorker();
 
   // Helper to merge frequency maps
   function mergeMaps(map1, map2) {
@@ -83,46 +86,53 @@ function wordFrequency() {
     }
   }
 
-  // Create a single worker instance for all chunks (optimization)
-  // Make sure the path is correct relative to your HTML file
-  const worker = new Worker("wordFrequencyWorker.js");
-  let workerError = false;
+  // Format result for display
+  function formatResult(freqMap) {
+    let mostCount = -Infinity, leastCount = Infinity;
+    let mostWords = [], leastWords = [];
+    for (const [word, count] of freqMap.entries()) {
+      if (count > mostCount) {
+        mostCount = count;
+        mostWords = [word];
+      } else if (count === mostCount) {
+        mostWords.push(word);
+      }
+      if (count < leastCount) {
+        leastCount = count;
+        leastWords = [word];
+      } else if (count === leastCount) {
+        leastWords.push(word);
+      }
+    }
+    let result = "Word Frequency:\n";
+    result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
+    result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
+    result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
+    // Hide loading spinner after processing is complete
+    spinnerElem.style.display = "none";
+    // Explicitly clear Maps/arrays before nullifying for better memory release
+    // clear() releases internal references immediately, aiding GC
+    if (Array.isArray(mostWords)) mostWords.length = 0;
+    if (Array.isArray(leastWords)) leastWords.length = 0;
+    if (freqMap instanceof Map) freqMap.clear();
+    mostWords = null;
+    leastWords = null;
+    freqMap = null;
+    return result;
+  }
 
+  // Worker management function
+  function createWorker() {
+    // Make sure the path is correct relative to your HTML file
+    return new Worker("wordFrequencyWorker.js");
+  }
+
+  // Chunk processing function
   function processNextChunk() {
     if (workerError) return; // Stop if error occurred
     if (chunkStart >= words.length) {
       // All chunks processed, display results
-      let mostCount = -Infinity, leastCount = Infinity;
-      let mostWords = [], leastWords = [];
-      for (const [word, count] of freqMap.entries()) {
-        if (count > mostCount) {
-          mostCount = count;
-          mostWords = [word];
-        } else if (count === mostCount) {
-          mostWords.push(word);
-        }
-        if (count < leastCount) {
-          leastCount = count;
-          leastWords = [word];
-        } else if (count === leastCount) {
-          leastWords.push(word);
-        }
-      }
-      let result = "Word Frequency:\n";
-      result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
-      result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-      result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-  myFreqCalcElem.textContent = result;
-  // Hide loading spinner after processing is complete
-  spinnerElem.style.display = "none";
-  // Explicitly clear Maps/arrays before nullifying for better memory release
-  // clear() releases internal references immediately, aiding GC
-  if (Array.isArray(mostWords)) mostWords.length = 0;
-  if (Array.isArray(leastWords)) leastWords.length = 0;
-  if (freqMap instanceof Map) freqMap.clear();
-  mostWords = null;
-  leastWords = null;
-  freqMap = null;
+      myFreqCalcElem.textContent = formatResult(freqMap);
       // Track analysis count and remove event listener only after repeated analysis
       analysisCount++;
       if (analysisCount >= MAX_ANALYSIS) {
@@ -139,15 +149,15 @@ function wordFrequency() {
 
   worker.onmessage = function(e) {
     // Merge chunk result into main freqMap
-  let chunkMapArr = e.data; // Use let so we can nullify
-  let chunkMap = new Map(chunkMapArr);
-  mergeMaps(freqMap, chunkMap);
-  // Explicitly clear Maps/arrays before nullifying for better memory release
-  // clear() releases internal references immediately, aiding GC
-  if (Array.isArray(chunkMapArr)) chunkMapArr.length = 0;
-  if (chunkMap instanceof Map) chunkMap.clear();
-  chunkMapArr = null;
-  chunkMap = null;
+    let chunkMapArr = e.data; // Use let so we can nullify
+    let chunkMap = new Map(chunkMapArr);
+    mergeMaps(freqMap, chunkMap);
+    // Explicitly clear Maps/arrays before nullifying for better memory release
+    // clear() releases internal references immediately, aiding GC
+    if (Array.isArray(chunkMapArr)) chunkMapArr.length = 0;
+    if (chunkMap instanceof Map) chunkMap.clear();
+    chunkMapArr = null;
+    chunkMap = null;
     // Use requestIdleCallback for chunk processing if supported
     // This allows the browser to schedule work during idle periods, improving UI responsiveness
     if (window.requestIdleCallback) {
@@ -158,11 +168,11 @@ function wordFrequency() {
     }
   };
   worker.onerror = function(error) {
-  myFreqCalcElem.textContent = "Worker error: " + error.message;
-  // Hide loading spinner on error
-  spinnerElem.style.display = "none";
-  workerError = true;
-  worker.terminate();
+    myFreqCalcElem.textContent = "Worker error: " + error.message;
+    // Hide loading spinner on error
+    spinnerElem.style.display = "none";
+    workerError = true;
+    worker.terminate();
   };
 
   processNextChunk();
