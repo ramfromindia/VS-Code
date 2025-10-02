@@ -28,10 +28,35 @@ const myInputElem = document.getElementById("myInput");
 const myFreqCalcElem = document.getElementById("myFreqCalc");
 const myBtnElem = document.getElementById("myBtn");
 
+// Create and cache a loading spinner element
+let spinnerElem = document.getElementById("loadingSpinner");
+if (!spinnerElem) {
+  spinnerElem = document.createElement("div");
+  spinnerElem.id = "loadingSpinner";
+  spinnerElem.style.display = "none";
+  spinnerElem.style.position = "absolute";
+  spinnerElem.style.left = "50%";
+  spinnerElem.style.top = "50%";
+  spinnerElem.style.transform = "translate(-50%, -50%)";
+  spinnerElem.style.zIndex = "1000";
+  spinnerElem.innerHTML = '<div style="border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>';
+  document.body.appendChild(spinnerElem);
+}
+
+// Add spinner animation CSS if not present
+if (!document.getElementById("spinnerStyle")) {
+  const styleElem = document.createElement("style");
+  styleElem.id = "spinnerStyle";
+  styleElem.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+  document.head.appendChild(styleElem);
+}
+
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
 function wordFrequency() {
   const myInput = myInputElem.value;
+  // Show loading spinner while processing heavy computation
+  spinnerElem.style.display = "block";
 
   // If input is empty or only whitespace, show message and exit
   if (!myInput.trim()) {
@@ -87,11 +112,17 @@ function wordFrequency() {
       result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
       result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
       result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-      myFreqCalcElem.textContent = result;
-      // Nullify large arrays/maps after use
-      mostWords = null;
-      leastWords = null;
-      freqMap = null;
+  myFreqCalcElem.textContent = result;
+  // Hide loading spinner after processing is complete
+  spinnerElem.style.display = "none";
+  // Explicitly clear Maps/arrays before nullifying for better memory release
+  // clear() releases internal references immediately, aiding GC
+  if (Array.isArray(mostWords)) mostWords.length = 0;
+  if (Array.isArray(leastWords)) leastWords.length = 0;
+  if (freqMap instanceof Map) freqMap.clear();
+  mostWords = null;
+  leastWords = null;
+  freqMap = null;
       // Track analysis count and remove event listener only after repeated analysis
       analysisCount++;
       if (analysisCount >= MAX_ANALYSIS) {
@@ -108,18 +139,30 @@ function wordFrequency() {
 
   worker.onmessage = function(e) {
     // Merge chunk result into main freqMap
-    let chunkMapArr = e.data; // Use let so we can nullify
-    let chunkMap = new Map(chunkMapArr);
-    mergeMaps(freqMap, chunkMap);
-    // Nullify chunkMapArr and chunkMap after use
-    chunkMapArr = null;
-    chunkMap = null;
-    setTimeout(processNextChunk, 0);
+  let chunkMapArr = e.data; // Use let so we can nullify
+  let chunkMap = new Map(chunkMapArr);
+  mergeMaps(freqMap, chunkMap);
+  // Explicitly clear Maps/arrays before nullifying for better memory release
+  // clear() releases internal references immediately, aiding GC
+  if (Array.isArray(chunkMapArr)) chunkMapArr.length = 0;
+  if (chunkMap instanceof Map) chunkMap.clear();
+  chunkMapArr = null;
+  chunkMap = null;
+    // Use requestIdleCallback for chunk processing if supported
+    // This allows the browser to schedule work during idle periods, improving UI responsiveness
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(processNextChunk);
+    } else {
+      // Fallback to setTimeout if requestIdleCallback is not available
+      setTimeout(processNextChunk, 0);
+    }
   };
   worker.onerror = function(error) {
-    myFreqCalcElem.textContent = "Worker error: " + error.message;
-    workerError = true;
-    worker.terminate();
+  myFreqCalcElem.textContent = "Worker error: " + error.message;
+  // Hide loading spinner on error
+  spinnerElem.style.display = "none";
+  workerError = true;
+  worker.terminate();
   };
 
   processNextChunk();
