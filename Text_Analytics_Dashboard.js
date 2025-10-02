@@ -19,23 +19,30 @@
 // - Modular functions for each analytic feature
 // - Professional CSS styling
 
+// Track repeated analysis globally
+let analysisCount = 0;
+const MAX_ANALYSIS = 3;
+
+// Cache DOM elements for efficiency
+const myInputElem = document.getElementById("myInput");
+const myFreqCalcElem = document.getElementById("myFreqCalc");
+const myBtnElem = document.getElementById("myBtn");
+
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
 function wordFrequency() {
-  // Get the input text and result display element
-  const myInput = document.getElementById("myInput").value;
-  const myFreqCalc = document.getElementById("myFreqCalc");
+  const myInput = myInputElem.value;
 
   // If input is empty or only whitespace, show message and exit
   if (!myInput.trim()) {
-    myFreqCalc.textContent = "No words found.";
+    myFreqCalcElem.textContent = "No words found.";
     return;
   }
 
   // Split input into words
   const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
   if (!words) {
-    myFreqCalc.textContent = "No words found.";
+    myFreqCalcElem.textContent = "No words found.";
     return;
   }
 
@@ -52,11 +59,10 @@ function wordFrequency() {
   }
 
   // Create a single worker instance for all chunks (optimization)
+  // Make sure the path is correct relative to your HTML file
   const worker = new Worker("wordFrequencyWorker.js");
-  // Track if an error occurred to avoid further processing
   let workerError = false;
 
-  // Function to process next chunk using the single worker
   function processNextChunk() {
     if (workerError) return; // Stop if error occurred
     if (chunkStart >= words.length) {
@@ -81,39 +87,42 @@ function wordFrequency() {
       result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
       result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
       result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-      myFreqCalc.textContent = result;
-      // Remove event listener after processing is done
-      const btn = document.getElementById("myBtn");
-      btn.removeEventListener("click", wordFrequency);
-      // Terminate the worker after all chunks are processed
+      myFreqCalcElem.textContent = result;
+      // Nullify large arrays/maps after use
+      mostWords = null;
+      leastWords = null;
+      freqMap = null;
+      // Track analysis count and remove event listener only after repeated analysis
+      analysisCount++;
+      if (analysisCount >= MAX_ANALYSIS) {
+        myBtnElem.removeEventListener("click", wordFrequency);
+      }
       worker.terminate();
       return;
     }
     // Prepare chunk
     const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
     chunkStart += CHUNK_SIZE;
-    // Send chunk to the single worker
     worker.postMessage(chunk);
   }
 
-  // Listen for messages from the worker (reused for all chunks)
   worker.onmessage = function(e) {
     // Merge chunk result into main freqMap
-    const chunkMapArr = e.data; // Array of [word, count] pairs
-    const chunkMap = new Map(chunkMapArr);
+    let chunkMapArr = e.data; // Use let so we can nullify
+    let chunkMap = new Map(chunkMapArr);
     mergeMaps(freqMap, chunkMap);
-    // Process next chunk
+    // Nullify chunkMapArr and chunkMap after use
+    chunkMapArr = null;
+    chunkMap = null;
     setTimeout(processNextChunk, 0);
   };
   worker.onerror = function(error) {
-    myFreqCalc.textContent = "Worker error: " + error.message;
+    myFreqCalcElem.textContent = "Worker error: " + error.message;
     workerError = true;
     worker.terminate();
   };
 
-  // Start processing chunks with the single worker
   processNextChunk();
 }
 
-// Add event listener for optimized function button
-document.getElementById("myBtn").addEventListener("click", wordFrequency);
+myBtnElem.addEventListener("click", wordFrequency);
