@@ -33,22 +33,10 @@ let spinnerElem = document.getElementById("loadingSpinner");
 if (!spinnerElem) {
   spinnerElem = document.createElement("div");
   spinnerElem.id = "loadingSpinner";
+  spinnerElem.classList.add("spinner-overlay");
   spinnerElem.style.display = "none";
-  spinnerElem.style.position = "absolute";
-  spinnerElem.style.left = "50%";
-  spinnerElem.style.top = "50%";
-  spinnerElem.style.transform = "translate(-50%, -50%)";
-  spinnerElem.style.zIndex = "1000";
-  spinnerElem.innerHTML = '<div style="border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>';
+  spinnerElem.innerHTML = '<div class="spinner"></div>';
   document.body.appendChild(spinnerElem);
-}
-
-// Add spinner animation CSS if not present
-if (!document.getElementById("spinnerStyle")) {
-  const styleElem = document.createElement("style");
-  styleElem.id = "spinnerStyle";
-  styleElem.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
-  document.head.appendChild(styleElem);
 }
 
 // Optimized word frequency function for large scale data sets
