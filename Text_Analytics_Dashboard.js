@@ -19,9 +19,7 @@
 // - Modular functions for each analytic feature
 // - Professional CSS styling
 
-// Track repeated analysis globally
-let analysisCount = 0;
-const MAX_ANALYSIS = 3;
+// No analysis count or limit needed; allow unlimited analyses for robust, social-media-style behavior
 
 // Cache DOM elements for efficiency
 const myInputElem = document.getElementById("myInput");
@@ -41,14 +39,23 @@ if (!spinnerElem) {
 
 // Optimized word frequency function for large scale data sets
 // Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
+
+// Refactored for optimal repeated analysis and memory management
 function wordFrequency() {
-  const myInput = myInputElem.value;
-  // Show loading spinner while processing heavy computation
+  // Always reset state variables at the start of each analysis
+  // This ensures previous runs do not interfere with new input
+  let chunkStart = 0;
+  let freqMap = new Map();
+  let workerError = false;
+
+  // Show loading spinner while processing
   spinnerElem.style.display = "block";
 
-  // If input is empty or only whitespace, show message and exit
+  // Get current input value
+  const myInput = myInputElem.value;
   if (!myInput.trim()) {
     myFreqCalcElem.textContent = "No words found.";
+    spinnerElem.style.display = "none"; // Always hide spinner on exit
     return;
   }
 
@@ -56,15 +63,14 @@ function wordFrequency() {
   const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
   if (!words) {
     myFreqCalcElem.textContent = "No words found.";
+    spinnerElem.style.display = "none";
     return;
   }
 
   // Chunk size for processing
   const CHUNK_SIZE = 10000;
-  let chunkStart = 0;
-  let freqMap = new Map();
-  let workerError = false;
-  // Create a single worker instance for all chunks (optimization)
+  // Create a new worker for each analysis to avoid stale state
+  // This ensures each analysis is independent, like social media platforms
   const worker = createWorker();
 
   // Helper to merge frequency maps
@@ -74,7 +80,7 @@ function wordFrequency() {
     }
   }
 
-  // Format result for display
+  // Format result for display (no clearing or nullifying here)
   function formatResult(freqMap) {
     let mostCount = -Infinity, leastCount = Infinity;
     let mostWords = [], leastWords = [];
@@ -96,22 +102,13 @@ function wordFrequency() {
     result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
     result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
     result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-    // Hide loading spinner after processing is complete
-    spinnerElem.style.display = "none";
-    // Explicitly clear Maps/arrays before nullifying for better memory release
-    // clear() releases internal references immediately, aiding GC
-    if (Array.isArray(mostWords)) mostWords.length = 0;
-    if (Array.isArray(leastWords)) leastWords.length = 0;
-    if (freqMap instanceof Map) freqMap.clear();
-    mostWords = null;
-    leastWords = null;
-    freqMap = null;
+    // Spinner is hidden after analysis in processNextChunk
     return result;
   }
 
   // Worker management function
   function createWorker() {
-    // Make sure the path is correct relative to your HTML file
+    // Always create a new worker for each run
     return new Worker("wordFrequencyWorker.js");
   }
 
@@ -121,11 +118,8 @@ function wordFrequency() {
     if (chunkStart >= words.length) {
       // All chunks processed, display results
       myFreqCalcElem.textContent = formatResult(freqMap);
-      // Track analysis count and remove event listener only after repeated analysis
-      analysisCount++;
-      if (analysisCount >= MAX_ANALYSIS) {
-        myBtnElem.removeEventListener("click", wordFrequency);
-      }
+      spinnerElem.style.display = "none"; // Always hide spinner after analysis
+      // No event listener removal; keep UI responsive for unlimited analyses
       worker.terminate();
       return;
     }
@@ -137,27 +131,19 @@ function wordFrequency() {
 
   worker.onmessage = function(e) {
     // Merge chunk result into main freqMap
-    let chunkMapArr = e.data; // Use let so we can nullify
+    let chunkMapArr = e.data;
     let chunkMap = new Map(chunkMapArr);
     mergeMaps(freqMap, chunkMap);
-    // Explicitly clear Maps/arrays before nullifying for better memory release
-    // clear() releases internal references immediately, aiding GC
-    if (Array.isArray(chunkMapArr)) chunkMapArr.length = 0;
-    if (chunkMap instanceof Map) chunkMap.clear();
-    chunkMapArr = null;
-    chunkMap = null;
+    // No need to clear or nullify here; let GC handle it
     // Use requestIdleCallback for chunk processing if supported
-    // This allows the browser to schedule work during idle periods, improving UI responsiveness
     if (window.requestIdleCallback) {
       window.requestIdleCallback(processNextChunk);
     } else {
-      // Fallback to setTimeout if requestIdleCallback is not available
       setTimeout(processNextChunk, 0);
     }
   };
   worker.onerror = function(error) {
     myFreqCalcElem.textContent = "Worker error: " + error.message;
-    // Hide loading spinner on error
     spinnerElem.style.display = "none";
     workerError = true;
     worker.terminate();
@@ -166,4 +152,5 @@ function wordFrequency() {
   processNextChunk();
 }
 
+// Event listener remains active for unlimited analyses, just like social media platforms
 myBtnElem.addEventListener("click", wordFrequency);
