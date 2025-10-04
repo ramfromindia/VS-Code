@@ -1,3 +1,6 @@
+// --- New Feature: Show Sorted Word Frequency List ---
+// Adds a button to display the sorted word frequency list in a styled div below the main result.
+// The sorted list is updated after each analysis and shown only when requested.
 
 // Project Description:
 // Text Analytics Dashboard
@@ -25,6 +28,10 @@
 const myInputElem = document.getElementById("myInput");
 const myFreqCalcElem = document.getElementById("myFreqCalc");
 const myBtnElem = document.getElementById("myBtn");
+// New button for showing sorted list
+const showSortedBtn = document.getElementById("showSortedBtn");
+// Container for sorted list (created dynamically)
+let sortedListDiv = null;
 
   // Create a new Web Worker for word frequency calculation
   const worker = new Worker('wordFrequencyWorker.js');
@@ -41,20 +48,54 @@ const myBtnElem = document.getElementById("myBtn");
     // Optionally, show a spinner or loading indicator here for large data
   });
 
+  // Store last sorted frequency array for display
+  let lastSortedFreqArr = [];
+
   // Listen for messages from the worker (results)
   worker.onmessage = function(e) {
     // e.data is an array of [word, count] pairs
     // Minimize DOM manipulations by building the result string first
     const freqArr = e.data;
+    // Sort by frequency descending and store for later use
+    lastSortedFreqArr = freqArr.slice().sort((a, b) => b[1] - a[1]);
     let result = '';
     // If the result is very large, consider showing only top N or paginating
-    freqArr.sort((a, b) => b[1] - a[1]); // Sort by frequency descending
-    for (const [word, count] of freqArr) {
+    for (const [word, count] of lastSortedFreqArr) {
       result += `${word}: ${count}\n`;
     }
     // Update the DOM only once after processing
     resultDiv.textContent = result;
+    // Remove sorted list if present (to avoid stale data)
+    if (sortedListDiv) {
+      sortedListDiv.remove();
+      sortedListDiv = null;
+    }
   };
+// Event listener for the new button to show sorted list
+showSortedBtn.addEventListener("click", function() {
+  // Remove previous sorted list if present
+  if (sortedListDiv) {
+    sortedListDiv.remove();
+    sortedListDiv = null;
+  }
+  // Build sorted list HTML
+  if (lastSortedFreqArr.length === 0) {
+    // No analysis done yet
+    sortedListDiv = document.createElement("div");
+    sortedListDiv.className = "sorted-list";
+    sortedListDiv.textContent = "No analysis data available. Please analyze text first.";
+    myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+    return;
+  }
+  sortedListDiv = document.createElement("div");
+  sortedListDiv.className = "sorted-list";
+  // Efficiently build the sorted list
+  let html = "<strong>Sorted Word Frequency List:</strong><br>";
+  html += lastSortedFreqArr.map(([word, count]) => `${word}: ${count}`).join("<br>");
+  sortedListDiv.innerHTML = html;
+  // Insert after main result container
+  myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+});
 let spinnerElem = document.getElementById("loadingSpinner");
 if (!spinnerElem) {
   spinnerElem = document.createElement("div");
@@ -108,10 +149,12 @@ function wordFrequency() {
     }
   }
 
-  // Format result for display (no clearing or nullifying here)
+  // Format result for display and update sorted list data
   function formatResult(freqMap) {
     let mostCount = -Infinity, leastCount = Infinity;
     let mostWords = [], leastWords = [];
+    // Build sorted array for the sorted list button
+    lastSortedFreqArr = Array.from(freqMap.entries()).sort((a, b) => b[1] - a[1]);
     for (const [word, count] of freqMap.entries()) {
       if (count > mostCount) {
         mostCount = count;

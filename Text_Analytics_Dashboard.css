@@ -20,3 +20,40 @@ body{background-color: #000;color: #fff;}
 	line-height: 1.5;
 	white-space: pre-wrap;
 }
+
+/* Professional button styling */
+button {
+	background: #222;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 8px 20px;
+	margin: 8px 4px 0 0;
+	font-size: 1rem;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+button:hover {
+	background: #444;
+}
+.secondary-btn {
+	background: #0057b8;
+	color: #fff;
+}
+.secondary-btn:hover {
+	background: #003a75;
+}
+
+/* Sorted list styling */
+.sorted-list {
+	max-height: 300px;
+	overflow-y: auto;
+	background: #181818;
+	border: 1px solid #444;
+	padding: 12px;
+	margin-top: 12px;
+	font-size: 0.95rem;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	color: #e0e0e0;
+}
