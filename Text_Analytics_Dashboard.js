@@ -26,7 +26,35 @@ const myInputElem = document.getElementById("myInput");
 const myFreqCalcElem = document.getElementById("myFreqCalc");
 const myBtnElem = document.getElementById("myBtn");
 
-// Create and cache a loading spinner element
+  // Create a new Web Worker for word frequency calculation
+  const worker = new Worker('wordFrequencyWorker.js');
+
+  // Get references to DOM elements
+  const input = document.getElementById('myInput');
+  const btn = document.getElementById('myBtn');
+  const resultDiv = document.getElementById('myFreqCalc');
+
+  // Listen for button click to start processing
+  btn.addEventListener('click', () => {
+    // Send raw input text to the worker for efficient processing
+    worker.postMessage(input.value);
+    // Optionally, show a spinner or loading indicator here for large data
+  });
+
+  // Listen for messages from the worker (results)
+  worker.onmessage = function(e) {
+    // e.data is an array of [word, count] pairs
+    // Minimize DOM manipulations by building the result string first
+    const freqArr = e.data;
+    let result = '';
+    // If the result is very large, consider showing only top N or paginating
+    freqArr.sort((a, b) => b[1] - a[1]); // Sort by frequency descending
+    for (const [word, count] of freqArr) {
+      result += `${word}: ${count}\n`;
+    }
+    // Update the DOM only once after processing
+    resultDiv.textContent = result;
+  };
 let spinnerElem = document.getElementById("loadingSpinner");
 if (!spinnerElem) {
   spinnerElem = document.createElement("div");

@@ -7,3 +7,16 @@ body{background-color: #000;color: #fff;}
 	transform: translate(-50%, -50%);
 	z-index: 1000;
 }
+
+/* Style for result container to handle large outputs efficiently */
+.result-container {
+	max-height: 300px;
+	overflow-y: auto;
+	background: #111;
+	border: 1px solid #333;
+	padding: 12px;
+	margin-top: 16px;
+	font-size: 1rem;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
