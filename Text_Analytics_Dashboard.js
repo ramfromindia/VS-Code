@@ -36,15 +36,16 @@ let sortedListDiv = null;
   // Create a new Web Worker for word frequency calculation
   const worker = new Worker('wordFrequencyWorker.js');
 
-  // Get references to DOM elements
-  const input = document.getElementById('myInput');
-  const btn = document.getElementById('myBtn');
-  const resultDiv = document.getElementById('myFreqCalc');
+  // Use cached DOM elements directly
 
   // Listen for button click to start processing
-  btn.addEventListener('click', () => {
-    // Send raw input text to the worker for efficient processing
-    worker.postMessage(input.value);
+  myBtnElem.addEventListener('click', () => {
+    // Sanitize input: trim, lowercase, remove non-word chars, split into words
+    let sanitizedText = myInputElem.value.trim().toLowerCase();
+    // Replace non-word characters with space, then split
+    let words = sanitizedText.match(/\b\w+\b/g) || [];
+    // Send sanitized words array to worker for processing and sorting
+    worker.postMessage(words);
     // Optionally, show a spinner or loading indicator here for large data
   });
 
@@ -53,18 +54,15 @@ let sortedListDiv = null;
 
   // Listen for messages from the worker (results)
   worker.onmessage = function(e) {
-    // e.data is an array of [word, count] pairs
-    // Minimize DOM manipulations by building the result string first
-    const freqArr = e.data;
-    // Sort by frequency descending and store for later use
-    lastSortedFreqArr = freqArr.slice().sort((a, b) => b[1] - a[1]);
+    // e.data is an array of [word, count] pairs, already sorted by worker
+    lastSortedFreqArr = e.data;
     let result = '';
     // If the result is very large, consider showing only top N or paginating
     for (const [word, count] of lastSortedFreqArr) {
       result += `${word}: ${count}\n`;
     }
     // Update the DOM only once after processing
-    resultDiv.textContent = result;
+    myFreqCalcElem.textContent = result;
     // Remove sorted list if present (to avoid stale data)
     if (sortedListDiv) {
       sortedListDiv.remove();
