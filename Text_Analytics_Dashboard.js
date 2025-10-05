@@ -28,71 +28,52 @@
 const myInputElem = document.getElementById("myInput");
 const myFreqCalcElem = document.getElementById("myFreqCalc");
 const myBtnElem = document.getElementById("myBtn");
-// New button for showing sorted list
 const showSortedBtn = document.getElementById("showSortedBtn");
-// Container for sorted list (created dynamically)
 let sortedListDiv = null;
 
-  // Create a new Web Worker for word frequency calculation
-  const worker = new Worker('wordFrequencyWorker.js');
+// Add ARIA roles for accessibility
+myInputElem.setAttribute("aria-label", "Text input area");
+myFreqCalcElem.setAttribute("role", "region");
+myFreqCalcElem.setAttribute("aria-live", "polite");
+showSortedBtn.setAttribute("aria-label", "Show sorted word frequency list");
+myBtnElem.setAttribute("aria-label", "Analyze text");
 
-  // Use cached DOM elements directly
+// Remove duplicate event listener and unify spinner usage
+// Refactored: Only one event listener for Analyze button, handled below
 
-  // Listen for button click to start processing
-  myBtnElem.addEventListener('click', () => {
-    // Sanitize input: trim, lowercase, remove non-word chars, split into words
-    let sanitizedText = myInputElem.value.trim().toLowerCase();
-    // Replace non-word characters with space, then split
-    let words = sanitizedText.match(/\b\w+\b/g) || [];
-    // Send sanitized words array to worker for processing and sorting
-    worker.postMessage(words);
-    // Optionally, show a spinner or loading indicator here for large data
-  });
+let lastSortedFreqArr = [];
 
-  // Store last sorted frequency array for display
-  let lastSortedFreqArr = [];
-
-  // Listen for messages from the worker (results)
-  worker.onmessage = function(e) {
-    // e.data is an array of [word, count] pairs, already sorted by worker
-    lastSortedFreqArr = e.data;
-    let result = '';
-    // If the result is very large, consider showing only top N or paginating
-    for (const [word, count] of lastSortedFreqArr) {
-      result += `${word}: ${count}\n`;
-    }
-    // Update the DOM only once after processing
-    myFreqCalcElem.textContent = result;
-    // Remove sorted list if present (to avoid stale data)
+// Spinner element setup (moved up for unified usage)
+// Spinner element setup (single declaration for whole script)
+// ...existing code...
+// Event listener for the new button to show sorted list
+showSortedBtn.addEventListener("click", function(e) {
+  // Keyboard accessibility: allow Enter/Space to trigger button
+  if (e.type === "click" || e.key === "Enter" || e.key === " ") {
     if (sortedListDiv) {
       sortedListDiv.remove();
       sortedListDiv = null;
     }
-  };
-// Event listener for the new button to show sorted list
-showSortedBtn.addEventListener("click", function() {
-  // Remove previous sorted list if present
-  if (sortedListDiv) {
-    sortedListDiv.remove();
-    sortedListDiv = null;
-  }
-  // Build sorted list HTML
-  if (lastSortedFreqArr.length === 0) {
-    // No analysis done yet
+    if (lastSortedFreqArr.length === 0) {
+      sortedListDiv = document.createElement("div");
+      sortedListDiv.className = "sorted-list";
+      sortedListDiv.textContent = "No analysis data available. Please analyze text first.";
+      myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+      return;
+    }
     sortedListDiv = document.createElement("div");
     sortedListDiv.className = "sorted-list";
-    sortedListDiv.textContent = "No analysis data available. Please analyze text first.";
+    let html = "<strong>Sorted Word Frequency List:</strong><br>";
+    html += lastSortedFreqArr.map(([word, count]) => `${word}: ${count}`).join("<br>");
+    sortedListDiv.innerHTML = html;
     myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
-    return;
   }
-  sortedListDiv = document.createElement("div");
-  sortedListDiv.className = "sorted-list";
-  // Efficiently build the sorted list
-  let html = "<strong>Sorted Word Frequency List:</strong><br>";
-  html += lastSortedFreqArr.map(([word, count]) => `${word}: ${count}`).join("<br>");
-  sortedListDiv.innerHTML = html;
-  // Insert after main result container
-  myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+});
+// Keyboard accessibility for sorted list button
+showSortedBtn.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" || e.key === " ") {
+    showSortedBtn.click();
+  }
 });
 let spinnerElem = document.getElementById("loadingSpinner");
 if (!spinnerElem) {
@@ -104,13 +85,16 @@ if (!spinnerElem) {
   document.body.appendChild(spinnerElem);
 }
 
-// Optimized word frequency function for large scale data sets
-// Uses Map for memory efficiency, processes input in chunks, and can be offloaded to a Web Worker for UI responsiveness
+// Helper function for sanitizing and splitting input text
+function getSanitizedWords(input) {
+  // Trims, lowercases, and extracts words using regex
+  return input.trim().toLowerCase().match(/\b\w+\b/g) || [];
+}
 
-// Refactored for optimal repeated analysis and memory management
-function wordFrequency() {
-  // Always reset state variables at the start of each analysis
-  // This ensures previous runs do not interfere with new input
+// Optimized word frequency function for large scale data sets
+function wordFrequency(e) {
+  // Keyboard accessibility: allow Enter/Space to trigger button
+  if (e && e.type === "keydown" && !(e.key === "Enter" || e.key === " ")) return;
   let chunkStart = 0;
   let freqMap = new Map();
   let workerError = false;
@@ -118,17 +102,9 @@ function wordFrequency() {
   // Show loading spinner while processing
   spinnerElem.style.display = "block";
 
-  // Get current input value
-  const myInput = myInputElem.value;
-  if (!myInput.trim()) {
-    myFreqCalcElem.textContent = "No words found.";
-    spinnerElem.style.display = "none"; // Always hide spinner on exit
-    return;
-  }
-
-  // Split input into words
-  const words = myInput.trim().toLowerCase().match(/\b\w+\b/g);
-  if (!words) {
+  // Get current input value and sanitize
+  const words = getSanitizedWords(myInputElem.value);
+  if (words.length === 0) {
     myFreqCalcElem.textContent = "No words found.";
     spinnerElem.style.display = "none";
     return;
@@ -137,8 +113,7 @@ function wordFrequency() {
   // Chunk size for processing
   const CHUNK_SIZE = 10000;
   // Create a new worker for each analysis to avoid stale state
-  // This ensures each analysis is independent, like social media platforms
-  const worker = createWorker();
+  const worker = new Worker("wordFrequencyWorker.js");
 
   // Helper to merge frequency maps
   function mergeMaps(map1, map2) {
@@ -151,7 +126,6 @@ function wordFrequency() {
   function formatResult(freqMap) {
     let mostCount = -Infinity, leastCount = Infinity;
     let mostWords = [], leastWords = [];
-    // Build sorted array for the sorted list button
     lastSortedFreqArr = Array.from(freqMap.entries()).sort((a, b) => b[1] - a[1]);
     for (const [word, count] of freqMap.entries()) {
       if (count > mostCount) {
@@ -168,43 +142,30 @@ function wordFrequency() {
       }
     }
     let result = "Word Frequency:\n";
-    result += JSON.stringify(Object.fromEntries(freqMap), null, 2);
-    result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)`;
-    result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})`;
-    // Spinner is hidden after analysis in processNextChunk
+    result += (JSON.stringify(Object.fromEntries(freqMap), null, 2)) + "<br><br>" ;
+    result += `\nMost Recurring Word(s): ${mostWords.join(", ")} (${mostCount} times)<br>`;
+    result += `\nLeast Recurring Word(s): ${leastWords.join(", ")} (${leastCount} time${leastCount > 1 ? 's' : ''})<br><br>`;
     return result;
-  }
-
-  // Worker management function
-  function createWorker() {
-    // Always create a new worker for each run
-    return new Worker("wordFrequencyWorker.js");
   }
 
   // Chunk processing function
   function processNextChunk() {
-    if (workerError) return; // Stop if error occurred
+    if (workerError) return;
     if (chunkStart >= words.length) {
-      // All chunks processed, display results
-      myFreqCalcElem.textContent = formatResult(freqMap);
-      spinnerElem.style.display = "none"; // Always hide spinner after analysis
-      // No event listener removal; keep UI responsive for unlimited analyses
+      myFreqCalcElem.innerHTML = formatResult(freqMap);
+      spinnerElem.style.display = "none";
       worker.terminate();
       return;
     }
-    // Prepare chunk
     const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
     chunkStart += CHUNK_SIZE;
     worker.postMessage(chunk);
   }
 
   worker.onmessage = function(e) {
-    // Merge chunk result into main freqMap
     let chunkMapArr = e.data;
     let chunkMap = new Map(chunkMapArr);
     mergeMaps(freqMap, chunkMap);
-    // No need to clear or nullify here; let GC handle it
-    // Use requestIdleCallback for chunk processing if supported
     if (window.requestIdleCallback) {
       window.requestIdleCallback(processNextChunk);
     } else {
@@ -221,5 +182,10 @@ function wordFrequency() {
   processNextChunk();
 }
 
-// Event listener remains active for unlimited analyses, just like social media platforms
+// Event listener for unlimited analyses, with keyboard accessibility
 myBtnElem.addEventListener("click", wordFrequency);
+myBtnElem.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" || e.key === " ") {
+    wordFrequency(e);
+  }
+});
