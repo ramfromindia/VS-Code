@@ -1,23 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <title>My HTML page</title>
-        <link rel = "stylesheet" href = "Text_Analytics_Dashboard.css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Text Analytics Dashboard</title>
+        <meta name="description" content="Analyze text for word frequency, statistics, and more with this interactive dashboard.">
+        <link rel="stylesheet" href="Text_Analytics_Dashboard.css">
     </head>
     <body>
-        <label for = "myInput">Input text:</label>
-        <textarea id = "myInput" placeholder="Enter your text here..." rows = "6" cols = "50"></textarea>
-    <!-- Removed basic wordFrequency button and result display -->
-    <!-- Optimized function UI -->
-    <button id="myBtn">Analyze</button>
-    <!-- Button to display sorted word frequency list -->
-    <button id="showSortedBtn" class="secondary-btn">Show Sorted List</button>
-    <!-- Use a scrollable div for efficient rendering of large results -->
-    <div id="myFreqCalc" class="result-container"></div>
-        <!-- Spinner overlay for loading indication -->
-        <div id="loadingSpinner" class="spinner-overlay" style="display:none;">
-            <div class="spinner"></div>
-        </div>
-        <script src ="Text_Analytics_Dashboard.js"></script>
+        <header>
+            <h1>Text Analytics Dashboard</h1>
+        </header>
+        <main>
+            <section aria-labelledby="input-label">
+                <label id="input-label" for="myInput">Input text:</label>
+                <textarea id="myInput" placeholder="Enter your text here..." rows="6" cols="50" aria-label="Text input area"></textarea>
+            </section>
+            <section aria-label="Analysis Actions">
+                <button id="myBtn" aria-label="Analyze text">Analyze</button>
+                <button id="showSortedBtn" class="secondary-btn" aria-label="Show sorted word frequency list">Show Sorted List</button>
+            </section>
+            <section aria-label="Analysis Results">
+                <div id="myFreqCalc" class="result-container" role="region" aria-live="polite"></div>
+            </section>
+            <!-- Spinner overlay for loading indication -->
+            <div id="loadingSpinner" class="spinner-overlay" style="display:none;">
+                <div class="spinner"></div>
+            </div>
+        </main>
+        <footer>
+            <small>&copy; 2025 Text Analytics Dashboard</small>
+        </footer>
+        <script src="Text_Analytics_Dashboard.js"></script>
     </body>
 </html>
