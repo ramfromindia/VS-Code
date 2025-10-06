@@ -102,14 +102,7 @@ showSortedBtn.addEventListener("keydown", function(e) {
   }
 });
 let spinnerElem = document.getElementById("loadingSpinner");
-if (!spinnerElem) {
-  spinnerElem = document.createElement("div");
-  spinnerElem.id = "loadingSpinner";
-  spinnerElem.classList.add("spinner-overlay");
-  spinnerElem.style.display = "none";
-  spinnerElem.innerHTML = '<div class="spinner"></div>';
-  document.body.appendChild(spinnerElem);
-}
+// Spinner element is now in HTML. Just reference and use classList for show/hide.
 
 // Helper function for sanitizing and splitting input text
 function getSanitizedWords(input) {
