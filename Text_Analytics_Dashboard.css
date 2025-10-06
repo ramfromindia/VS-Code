@@ -12,7 +12,11 @@
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
-body{background-color: #000;color: #fff;}
+body {
+	background-color: var(--bg-color, #000);
+	color: var(--text-color, #fff);
+	font-family: system-ui, sans-serif;
+}
 
 .spinner-overlay {
 	position: fixed;
@@ -26,13 +30,14 @@ body{background-color: #000;color: #fff;}
 .result-container {
 	max-height: 300px;
 	overflow-y: auto;
-	background: #111;
-	border: 1px solid #333;
+	background: var(--panel-bg, #111);
+	border: 1px solid var(--panel-border, #333);
 	padding: 12px;
 	margin-top: 16px;
 	font-size: 1rem;
 	line-height: 1.5;
 	white-space: pre-wrap;
+	will-change: transform;
 }
 
 /* Professional button styling */
@@ -62,12 +67,13 @@ button:hover {
 .sorted-list {
 	max-height: 300px;
 	overflow-y: auto;
-	background: #181818;
-	border: 1px solid #444;
+	background: var(--sorted-bg, #181818);
+	border: 1px solid var(--sorted-border, #444);
 	padding: 12px;
 	margin-top: 12px;
 	font-size: 0.95rem;
 	line-height: 1.5;
 	white-space: pre-wrap;
-	color: #e0e0e0;
+	color: var(--sorted-text, #e0e0e0);
+	will-change: transform;
 }
