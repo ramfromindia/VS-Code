@@ -42,6 +42,13 @@ myBtnElem.setAttribute("aria-label", "Analyze text");
 // Refactored: Only one event listener for Analyze button, handled below
 
 let lastSortedFreqArr = [];
+// --- Output Caching ---
+let outputCache = {
+  input: null,
+  analysisHtml: null,
+  sortedListHtml: null,
+  sortedFreqArr: null
+};
 
 // Spinner element setup (moved up for unified usage)
 // Spinner element setup (single declaration for whole script)
@@ -54,19 +61,33 @@ showSortedBtn.addEventListener("click", function(e) {
       sortedListDiv.remove();
       sortedListDiv = null;
     }
-    if (lastSortedFreqArr.length === 0) {
+    const inputValue = myInputElem.value;
+    const words = getSanitizedWords(inputValue);
+    // If input is invalid, bypass cache and run as normal
+    if (words.length === 0 || lastSortedFreqArr.length === 0) {
       sortedListDiv = document.createElement("div");
       sortedListDiv.className = "sorted-list";
       sortedListDiv.textContent = "No analysis data available. Please analyze text first.";
       myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
       return;
     }
-    sortedListDiv = document.createElement("div");
-    sortedListDiv.className = "sorted-list";
+    // If input matches cache and sorted list html exists, use cached sorted list
+    if (outputCache.input === inputValue && outputCache.sortedListHtml) {
+      sortedListDiv = document.createElement("div");
+      sortedListDiv.className = "sorted-list";
+      sortedListDiv.innerHTML = outputCache.sortedListHtml;
+      myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+      return;
+    }
+    // Otherwise, generate and cache sorted list html
     let html = "<strong>Sorted Word Frequency List:</strong><br>";
     html += lastSortedFreqArr.map(([word, count]) => `${word}: ${count}`).join("<br>");
+    sortedListDiv = document.createElement("div");
+    sortedListDiv.className = "sorted-list";
     sortedListDiv.innerHTML = html;
     myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+    // Cache the sorted list html
+    outputCache.sortedListHtml = html;
   }
 });
 // Keyboard accessibility for sorted list button
@@ -95,34 +116,52 @@ function getSanitizedWords(input) {
 function wordFrequency(e) {
   // Keyboard accessibility: allow Enter/Space to trigger button
   if (e && e.type === "keydown" && !(e.key === "Enter" || e.key === " ")) return;
-  let chunkStart = 0;
-  let freqMap = new Map();
-  let workerError = false;
 
-  // Show loading spinner while processing
-  spinnerElem.style.display = "block";
+  // Hide sorted list if visible and clear its content
+  if (sortedListDiv) {
+    sortedListDiv.remove();
+    sortedListDiv = null;
+  }
+  lastSortedFreqArr = [];
 
   // Get current input value and sanitize
-  const words = getSanitizedWords(myInputElem.value);
+  const inputValue = myInputElem.value;
+  const words = getSanitizedWords(inputValue);
+
+  // If input is invalid, bypass cache and run as normal
   if (words.length === 0) {
     myFreqCalcElem.textContent = "No words found.";
+    spinnerElem.style.display = "none";
+    outputCache.input = null;
+    outputCache.analysisHtml = null;
+    outputCache.sortedListHtml = null;
+    outputCache.sortedFreqArr = null;
+    return;
+  }
+
+  // If input matches cache, display cached analysis output
+  if (outputCache.input === inputValue && outputCache.analysisHtml) {
+    myFreqCalcElem.innerHTML = outputCache.analysisHtml;
+    lastSortedFreqArr = outputCache.sortedFreqArr ? [...outputCache.sortedFreqArr] : [];
     spinnerElem.style.display = "none";
     return;
   }
 
+  let chunkStart = 0;
+  let freqMap = new Map();
+  let workerError = false;
+  spinnerElem.style.display = "block";
+
   // Chunk size for processing
   const CHUNK_SIZE = 10000;
-  // Create a new worker for each analysis to avoid stale state
   const worker = new Worker("wordFrequencyWorker.js");
 
-  // Helper to merge frequency maps
   function mergeMaps(map1, map2) {
     for (const [word, count] of map2.entries()) {
       map1.set(word, (map1.get(word) || 0) + count);
     }
   }
 
-  // Format result for display and update sorted list data
   function formatResult(freqMap) {
     let mostCount = -Infinity, leastCount = Infinity;
     let mostWords = [], leastWords = [];
@@ -148,13 +187,18 @@ function wordFrequency(e) {
     return result;
   }
 
-  // Chunk processing function
   function processNextChunk() {
     if (workerError) return;
     if (chunkStart >= words.length) {
-      myFreqCalcElem.innerHTML = formatResult(freqMap);
+      const analysisHtml = formatResult(freqMap);
+      myFreqCalcElem.innerHTML = analysisHtml;
       spinnerElem.style.display = "none";
       worker.terminate();
+      // Cache the output
+      outputCache.input = inputValue;
+      outputCache.analysisHtml = analysisHtml;
+      outputCache.sortedFreqArr = lastSortedFreqArr ? [...lastSortedFreqArr] : [];
+      outputCache.sortedListHtml = null; // Will be set when sorted list is shown
       return;
     }
     const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
