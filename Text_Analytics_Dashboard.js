@@ -69,6 +69,11 @@ showSortedBtn.addEventListener("click", function(e) {
       sortedListDiv.className = "sorted-list";
       sortedListDiv.textContent = "No analysis data available. Please analyze text first.";
       myFreqCalcElem.parentNode.insertBefore(sortedListDiv, myFreqCalcElem.nextSibling);
+      setTimeout(function() {
+        if (sortedListDiv && sortedListDiv.parentNode) {
+          sortedListDiv.remove();
+        }
+      }, 1200); // 1.2 seconds
       return;
     }
     // If input matches cache and sorted list html exists, use cached sorted list
@@ -136,6 +141,11 @@ function wordFrequency(e) {
     outputCache.analysisHtml = null;
     outputCache.sortedListHtml = null;
     outputCache.sortedFreqArr = null;
+    setTimeout(function() {
+      if (myFreqCalcElem.textContent === "No words found.") {
+        myFreqCalcElem.textContent = "";
+      }
+    }, 1200); // 1.2 seconds
     return;
   }
 
