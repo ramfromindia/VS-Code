@@ -73,7 +73,7 @@ showSortedBtn.addEventListener("click", function(e) {
         if (sortedListDiv && sortedListDiv.parentNode) {
           sortedListDiv.remove();
         }
-      }, 1200); // 1.2 seconds
+      }, 500);
       return;
     }
     // If input matches cache and sorted list html exists, use cached sorted list
@@ -113,7 +113,8 @@ function getSanitizedWords(input) {
 // Optimized word frequency function for large scale data sets
 function wordFrequency(e) {
   // Keyboard accessibility: allow Enter/Space to trigger button
-  if (e && e.type === "keydown" && !(e.key === "Enter" || e.key === " ")) return;
+  // Use optional chaining to safely access event type
+  if (e?.type === "keydown" && !(e.key === "Enter" || e.key === " ")) return;
 
   // Hide sorted list if visible and clear its content
   if (sortedListDiv) {
@@ -138,16 +139,17 @@ function wordFrequency(e) {
       if (myFreqCalcElem.textContent === "No words found.") {
         myFreqCalcElem.textContent = "";
       }
-    }, 1200); // 1.2 seconds
+    }, 500);
     return;
   }
 
   // If input matches cache, display cached analysis output
   if (outputCache.input === inputValue && outputCache.analysisHtml) {
-    myFreqCalcElem.innerHTML = outputCache.analysisHtml;
-    lastSortedFreqArr = outputCache.sortedFreqArr ? [...outputCache.sortedFreqArr] : [];
-    spinnerElem.style.display = "none";
-    return;
+  myFreqCalcElem.innerHTML = outputCache.analysisHtml;
+  // Use nullish coalescing to default to empty array only if value is null/undefined
+  lastSortedFreqArr = outputCache.sortedFreqArr ?? [];
+  spinnerElem.style.display = "none";
+  return;
   }
 
   let chunkStart = 0;
@@ -161,7 +163,8 @@ function wordFrequency(e) {
 
   function mergeMaps(map1, map2) {
     for (const [word, count] of map2.entries()) {
-      map1.set(word, (map1.get(word) || 0) + count);
+      // Use nullish coalescing to treat only null/undefined as missing
+      map1.set(word, (map1.get(word) ?? 0) + count);
     }
   }
 
@@ -213,7 +216,8 @@ function wordFrequency(e) {
     let chunkMapArr = e.data;
     let chunkMap = new Map(chunkMapArr);
     mergeMaps(freqMap, chunkMap);
-    if (window.requestIdleCallback) {
+    // Use optional chaining to safely check for requestIdleCallback
+    if (window?.requestIdleCallback) {
       window.requestIdleCallback(processNextChunk);
     } else {
       setTimeout(processNextChunk, 0);
