@@ -77,3 +77,28 @@ button:hover {
 	color: var(--sorted-text, #e0e0e0);
 	will-change: transform;
 }
+
+/* Benchmark results styling */
+.benchmark-results {
+	margin-top: 16px;
+	border: 1px solid #ccc;
+	background: #f9f9f9;
+	padding: 12px;
+	color: #222;
+}
+.benchmark-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 8px;
+}
+.benchmark-table th, .benchmark-table td {
+	padding: 4px;
+	border-bottom: 1px solid #eee;
+}
+.benchmark-table th {
+	text-align: left;
+	background: #eaeaea;
+}
+.benchmark-table td {
+	background: #fff;
+}

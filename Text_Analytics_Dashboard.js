@@ -240,3 +240,51 @@ myBtnElem.addEventListener(`keydown`, function(e) {
     wordFrequency(e);
   }
 });
+
+
+// --- Utility Feature: Benchmark Multiple Functions (DOM Output) ---
+// This function benchmarks the execution time of multiple functions and displays results in the dashboard.
+// Usage: Add your functions and their arguments to the array below.
+// Results will be shown in a styled div below the analysis results.
+function benchmarkFunctionsDOM(functionsWithArgs) {
+  // Remove previous benchmark result if present
+  let oldDiv = document.getElementById(`benchmarkResults`);
+  if (oldDiv) oldDiv.remove();
+
+  const results = [];
+  for (const { fn, args } of functionsWithArgs) {
+    const start = performance.now();
+    fn(...(args || []));
+    const end = performance.now();
+    results.push({
+      name: fn.name || 'anonymous',
+      time: (end - start).toFixed(3)
+    });
+  }
+  // Sort results by execution time (ascending)
+  results.sort((a, b) => a.time - b.time);
+
+  // Create the results div and use CSS classes for styling
+  const div = document.createElement(`div`);
+  div.id = `benchmarkResults`;
+  div.className = `result-container benchmark-results`;
+  div.innerHTML = `<strong>Function Benchmark Results:</strong><br>`;
+  div.innerHTML += `<table class="benchmark-table">
+    <tr><th>Function</th><th>Time (ms)</th></tr>
+    ${results.map(r => `<tr><td>${r.name}</td><td style="text-align:right;">${r.time}</td></tr>`).join("")}
+    </table>`;
+  // Insert below analysis results
+  myFreqCalcElem.parentNode.insertBefore(div, myFreqCalcElem.nextSibling);
+  return results;
+}
+benchmarkFunctionsDOM([
+  { fn: getSanitizedWords, args: [`Paste your sample text here for analysis.`] },
+  { fn: wordFrequency, args: [null] }
+]);
+// Example usage:
+// benchmarkFunctionsDOM([
+//     { fn: wordFrequency, args: [/* event or input as needed */] },
+//     { fn: getSanitizedWords, args: ["example text"] }
+//     // Add more functions here
+// ]);
+// You can add or remove functions from the array above as needed.
