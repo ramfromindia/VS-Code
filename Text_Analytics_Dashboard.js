@@ -49,6 +49,11 @@ let outputCache = {
   sortedListHtml: null,
   sortedFreqArr: null
 };
+// Benchmark cache
+let benchmarkCache = {
+  input: null,
+  outputHtml: null
+};
 
 // Spinner element setup (moved up for unified usage)
 // Spinner element setup (single declaration for whole script)
@@ -247,12 +252,35 @@ myBtnElem.addEventListener(`keydown`, function(e) {
 // Usage: Add your functions and their arguments to the array below.
 // Results will be shown in a styled div below the analysis results.
 function benchmarkFunctionsDOM(functionsWithArgs) {
+  // Get current input value for caching
+  const currentInput = functionsWithArgs.map(f => JSON.stringify(f.args)).join('|');
+  // If input matches cache, show cached output and skip computation
+  if (benchmarkCache.input === currentInput && benchmarkCache.outputHtml) {
+    // Remove previous benchmark result and cache indicator if present
+    let oldDiv = document.getElementById('benchmarkResults');
+    if (oldDiv) oldDiv.remove();
+    let oldIndicator = myFreqCalcElem.parentNode.querySelector('.cache-indicator');
+    if (oldIndicator) oldIndicator.remove();
+    // Add cache indicator with fade-in effect
+    const indicator = document.createElement('div');
+    indicator.className = 'cache-indicator';
+    indicator.textContent = 'Showing cached results';
+    myFreqCalcElem.parentNode.insertBefore(indicator, myFreqCalcElem.nextSibling);
+    // Insert cached benchmark results
+    const div = document.createElement('div');
+    div.id = 'benchmarkResults';
+    div.classList.add('benchmark-results');
+    div.innerHTML = benchmarkCache.outputHtml;
+    indicator.parentNode.insertBefore(div, indicator.nextSibling);
+    return;
+  }
   // Remove previous benchmark result if present
-  let oldDiv = document.getElementById(`benchmarkResults`);
+  let oldDiv = document.getElementById('benchmarkResults');
   if (oldDiv) oldDiv.remove();
 
   const results = [];
-  for (const { fn, args } of functionsWithArgs) {
+  for (let i = 0; i < functionsWithArgs.length; i++) {
+    const { fn, args } = functionsWithArgs[i];
     const start = performance.now();
     fn(...(args || []));
     const end = performance.now();
@@ -269,9 +297,8 @@ function benchmarkFunctionsDOM(functionsWithArgs) {
   div.id = 'benchmarkResults';
   div.classList.add('benchmark-results');
   div.innerHTML = document.getElementById('benchmarkResultsTemplate').innerHTML;
-  // Fill table rows dynamically
+  // Fill table rows dynamically using DocumentFragment
   const tableBody = div.querySelector('.benchmark-table tbody');
-  // Use DocumentFragment to batch DOM updates for performance
   const fragment = document.createDocumentFragment();
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
@@ -288,16 +315,24 @@ function benchmarkFunctionsDOM(functionsWithArgs) {
   tableBody.appendChild(fragment);
   // Insert below analysis results
   myFreqCalcElem.parentNode.insertBefore(div, myFreqCalcElem.nextSibling);
+  // Cache the input and output HTML
+  benchmarkCache.input = currentInput;
+  benchmarkCache.outputHtml = div.innerHTML;
   return results;
 }
-benchmarkFunctionsDOM([
-  { fn: getSanitizedWords, args: [`Paste your sample text here for analysis.`] },
-  { fn: wordFrequency, args: [null] }
-]);
-// Example usage:
-// benchmarkFunctionsDOM([
-//     { fn: wordFrequency, args: [/* event or input as needed */] },
-//     { fn: getSanitizedWords, args: ["example text"] }
-//     // Add more functions here
-// ]);
-// You can add or remove functions from the array above as needed.
+
+// Add event listeners for benchmark button
+const benchmarkBtn = document.getElementById('benchmarkBtn');
+if (benchmarkBtn) {
+  benchmarkBtn.addEventListener('click', function() {
+    benchmarkFunctionsDOM([
+      { fn: getSanitizedWords, args: [myInputElem.value] },
+      { fn: wordFrequency, args: [null] }
+    ]);
+  });
+  benchmarkBtn.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      benchmarkBtn.click();
+    }
+  });
+}
