@@ -23,10 +23,22 @@
             <section aria-label="Analysis Results">
                 <div id="myFreqCalc" class="result-container" role="region" aria-live="polite"></div>
             </section>
-            <!-- Spinner overlay for loading indication -->
-            <div id="loadingSpinner" class="spinner-overlay" style="display:none;">
-                <div class="spinner"></div>
-            </div>
+                        <!-- Spinner overlay for loading indication -->
+                        <div id="loadingSpinner" class="spinner-overlay" style="display:none;">
+                                <div class="spinner"></div>
+                        </div>
+                        <!-- Benchmark Results Template (hidden) -->
+                        <template id="benchmarkResultsTemplate">
+                            <strong>Function Benchmark Results:</strong><br>
+                            <table class="benchmark-table">
+                                <thead>
+                                    <tr><th>Function</th><th>Time (ms)</th></tr>
+                                </thead>
+                                <tbody>
+                                    <!-- JS will fill rows here -->
+                                </tbody>
+                            </table>
+                        </template>
         </main>
         <footer>
             <small>&copy; 2025 Text Analytics Dashboard</small>

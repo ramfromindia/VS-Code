@@ -265,14 +265,27 @@ function benchmarkFunctionsDOM(functionsWithArgs) {
   results.sort((a, b) => a.time - b.time);
 
   // Create the results div and use CSS classes for styling
-  const div = document.createElement(`div`);
-  div.id = `benchmarkResults`;
-  div.className = `result-container benchmark-results`;
-  div.innerHTML = `<strong>Function Benchmark Results:</strong><br>`;
-  div.innerHTML += `<table class="benchmark-table">
-    <tr><th>Function</th><th>Time (ms)</th></tr>
-    ${results.map(r => `<tr><td>${r.name}</td><td style="text-align:right;">${r.time}</td></tr>`).join("")}
-    </table>`;
+  const div = document.createElement('div');
+  div.id = 'benchmarkResults';
+  div.classList.add('benchmark-results');
+  div.innerHTML = document.getElementById('benchmarkResultsTemplate').innerHTML;
+  // Fill table rows dynamically
+  const tableBody = div.querySelector('.benchmark-table tbody');
+  // Use DocumentFragment to batch DOM updates for performance
+  const fragment = document.createDocumentFragment();
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.textContent = r.name;
+    const timeCell = document.createElement('td');
+    timeCell.textContent = r.time;
+    timeCell.style.textAlign = 'right';
+    row.appendChild(nameCell);
+    row.appendChild(timeCell);
+    fragment.appendChild(row);
+  }
+  tableBody.appendChild(fragment);
   // Insert below analysis results
   myFreqCalcElem.parentNode.insertBefore(div, myFreqCalcElem.nextSibling);
   return results;
