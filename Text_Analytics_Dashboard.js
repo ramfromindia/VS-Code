@@ -278,15 +278,21 @@ function benchmarkFunctionsDOM(functionsWithArgs) {
   let oldDiv = document.getElementById('benchmarkResults');
   if (oldDiv) oldDiv.remove();
 
+  const NUM_RUNS = 10; // Number of times to run each function for averaging
   const results = [];
   for (let i = 0; i < functionsWithArgs.length; i++) {
     const { fn, args } = functionsWithArgs[i];
-    const start = performance.now();
-    fn(...(args || []));
-    const end = performance.now();
+    let totalTime = 0;
+    for (let run = 0; run < NUM_RUNS; run++) {
+      const start = performance.now();
+      fn(...(args || []));
+      const end = performance.now();
+      totalTime += (end - start);
+    }
+    const avgTime = totalTime / NUM_RUNS;
     results.push({
       name: fn.name || 'anonymous',
-      time: (end - start).toFixed(3)
+      time: avgTime.toFixed(3)
     });
   }
   // Sort results by execution time (ascending)
