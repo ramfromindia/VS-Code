@@ -162,8 +162,11 @@ function wordFrequency(e) {
   let workerError = false;
   spinnerElem.style.display = `block`;
 
-  // Chunk size for processing
-  const CHUNK_SIZE = 10000;
+  // Dynamic chunk sizing for adaptive performance
+  let chunkSize = 10000; // Initial chunk size
+  const MIN_CHUNK = 1000; // Minimum chunk size
+  const MAX_CHUNK = 50000; // Maximum chunk size
+  const TARGET_TIME = 50; // Target time per chunk in ms
   const worker = new Worker(`wordFrequencyWorker.js`);
 
   function mergeMaps(map1, map2) {
@@ -198,6 +201,7 @@ function wordFrequency(e) {
     return result;
   }
 
+  // Process next chunk with dynamic sizing
   function processNextChunk() {
     if (workerError) return;
     if (chunkStart >= words.length) {
@@ -212,9 +216,37 @@ function wordFrequency(e) {
       outputCache.sortedListHtml = null; // Will be set when sorted list is shown
       return;
     }
-    const chunk = words.slice(chunkStart, chunkStart + CHUNK_SIZE);
-    chunkStart += CHUNK_SIZE;
+    // Record start time for chunk processing
+    const start = performance.now();
+    const chunk = words.slice(chunkStart, chunkStart + chunkSize);
+    chunkStart += chunkSize;
     worker.postMessage(chunk);
+    // After worker returns, adjust chunk size based on elapsed time
+    worker.onmessage = function(e) {
+      let chunkMapArr = e.data;
+      let chunkMap = new Map(chunkMapArr);
+      mergeMaps(freqMap, chunkMap);
+      const end = performance.now();
+      const elapsed = end - start;
+      // Dynamically adjust chunk size for next batch
+      if (elapsed < TARGET_TIME && chunkSize < MAX_CHUNK) {
+        chunkSize = Math.min(chunkSize * 2, MAX_CHUNK); // Increase chunk size
+      } else if (elapsed > TARGET_TIME && chunkSize > MIN_CHUNK) {
+        chunkSize = Math.max(Math.floor(chunkSize / 2), MIN_CHUNK); // Decrease chunk size
+      }
+      // Use optional chaining to safely check for requestIdleCallback
+      if (window?.requestIdleCallback) {
+        window.requestIdleCallback(processNextChunk);
+      } else {
+        setTimeout(processNextChunk, 0);
+      }
+    };
+    worker.onerror = function(error) {
+      myFreqCalcElem.textContent = `Worker error: ` + error.message;
+      spinnerElem.style.display = `none`;
+      workerError = true;
+      worker.terminate();
+    };
   }
 
   worker.onmessage = function(e) {
