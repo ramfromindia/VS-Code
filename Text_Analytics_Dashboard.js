@@ -241,25 +241,8 @@ function wordFrequency(e) {
         setTimeout(processNextChunk, 0);
       }
     };
-    worker.onerror = function(error) {
-      myFreqCalcElem.textContent = `Worker error: ` + error.message;
-      spinnerElem.style.display = `none`;
-      workerError = true;
-      worker.terminate();
-    };
   }
-
-  worker.onmessage = function(e) {
-    let chunkMapArr = e.data;
-    let chunkMap = new Map(chunkMapArr);
-    mergeMaps(freqMap, chunkMap);
-    // Use optional chaining to safely check for requestIdleCallback
-    if (window?.requestIdleCallback) {
-      window.requestIdleCallback(processNextChunk);
-    } else {
-      setTimeout(processNextChunk, 0);
-    }
-  };
+  
   worker.onerror = function(error) {
     myFreqCalcElem.textContent = `Worker error: ` + error.message;
     spinnerElem.style.display = `none`;
@@ -280,9 +263,6 @@ myBtnElem.addEventListener(`keydown`, function(e) {
 
 
 // --- Utility Feature: Benchmark Multiple Functions (DOM Output) ---
-// This function benchmarks the execution time of multiple functions and displays results in the dashboard.
-// Usage: Add your functions and their arguments to the array below.
-// Results will be shown in a styled div below the analysis results.
 function benchmarkFunctionsDOM(functionsWithArgs) {
   // Get current input value for caching
   const currentInput = functionsWithArgs.map(f => JSON.stringify(f.args)).join('|');
