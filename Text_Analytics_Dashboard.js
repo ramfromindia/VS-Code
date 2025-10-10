@@ -55,12 +55,8 @@ let benchmarkCache = {
   outputHtml: null
 };
 
-// Spinner element setup (moved up for unified usage)
-// Spinner element setup (single declaration for whole script)
-// ...existing code...
-// Event listener for the new button to show sorted list
+// Keyboard accessibility: allow Enter/Space to trigger button
 showSortedBtn.addEventListener(`click`, function(e) {
-  // Keyboard accessibility: allow Enter/Space to trigger button
   if (e.type === `click` || e.key === `Enter` || e.key === ` `) {
     if (sortedListDiv) {
       sortedListDiv.remove();
@@ -100,14 +96,8 @@ showSortedBtn.addEventListener(`click`, function(e) {
     outputCache.sortedListHtml = html;
   }
 });
-// Keyboard accessibility for sorted list button
-showSortedBtn.addEventListener(`keydown`, function(e) {
-  if (e.key === `Enter` || e.key === ` `) {
-    showSortedBtn.click();
-  }
-});
+
 let spinnerElem = document.getElementById(`loadingSpinner`);
-// Spinner element is now in HTML. Just reference and use classList for show/hide.
 
 // Helper function for sanitizing and splitting input text
 function getSanitizedWords(input) {
@@ -242,7 +232,7 @@ function wordFrequency(e) {
       }
     };
   }
-  
+
   worker.onerror = function(error) {
     myFreqCalcElem.textContent = `Worker error: ` + error.message;
     spinnerElem.style.display = `none`;
