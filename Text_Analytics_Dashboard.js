@@ -31,6 +31,11 @@ const myBtnElem = document.getElementById(`myBtn`);
 const showSortedBtn = document.getElementById(`showSortedBtn`);
 let sortedListDiv = null;
 
+// Automatically focus the textarea on initial page load
+window.addEventListener('DOMContentLoaded', function() {
+  myInputElem.focus();
+});
+
 // Add ARIA roles for accessibility
 myInputElem.setAttribute(`aria-label`, `Text input area`);
 myFreqCalcElem.setAttribute(`role`, `region`);
@@ -105,9 +110,8 @@ function getSanitizedWords(input) {
   return input.trim().toLowerCase().match(/\b\w+\b/g) || [];
 }
 
-// Optimized word frequency function for large scale data sets
+// Optimized function for large scale data sets with keyboard trigger access and DOM event access like "click"
 function wordFrequency(e) {
-  // Keyboard accessibility: allow Enter/Space to trigger button
   // Use optional chaining to safely access event type
   if (e?.type === `keydown` && !(e.key === `Enter` || e.key === ` `)) return;
 
