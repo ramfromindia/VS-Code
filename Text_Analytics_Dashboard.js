@@ -43,9 +43,6 @@ myFreqCalcElem.setAttribute(`aria-live`, `polite`);
 showSortedBtn.setAttribute(`aria-label`, `Show sorted word frequency list`);
 myBtnElem.setAttribute(`aria-label`, `Analyze text`);
 
-// Remove duplicate event listener and unify spinner usage
-// Refactored: Only one event listener for Analyze button, handled below
-
 let lastSortedFreqArr = [];
 // --- Output Caching ---
 let outputCache = {
