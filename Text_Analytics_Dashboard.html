@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+            <!--
+                The <head> section contains metadata for the page, including:
+                - Character encoding
+                - Responsive viewport settings
+                - Page title and description for SEO
+                - Link to external CSS for styling
+            -->
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Text Analytics Dashboard</title>
@@ -13,22 +20,47 @@
         </header>
         <main>
             <section aria-labelledby="input-label">
+                    <!--
+                        Section: Text Input
+                        - Uses aria-labelledby to associate the label with the section for screen readers
+                        - <textarea> uses aria-label for additional accessibility
+                    -->
                 <label id="input-label" for="myInput">Input text:</label>
                 <textarea id="myInput" placeholder="Enter your text here..." rows="6" cols="50" aria-label="Text input area"></textarea>
             </section>
             <section aria-label="Analysis Actions">
+                    <!--
+                        Section: Analysis Actions
+                        - aria-label describes the purpose of this section for assistive technologies
+                        - Each button uses aria-label for clear action description
+                    -->
                 <button id="myBtn" aria-label="Analyze text">Analyze</button>
                 <button id="showSortedBtn" class="secondary-btn" aria-label="Show sorted word frequency list">Show Sorted List</button>
                 <button id="benchmarkBtn" class="secondary-btn" aria-label="Benchmark functions">Benchmark</button>
             </section>
             <section aria-label="Analysis Results">
+                    <!--
+                        Section: Analysis Results
+                        - aria-label provides a descriptive label for the section
+                        - <div> uses role="region" and aria-live="polite" to announce updates to screen readers
+                    -->
                 <div id="myFreqCalc" class="result-container" role="region" aria-live="polite"></div>
             </section>
                         <!-- Spinner overlay for loading indication -->
+                            <!--
+                                Spinner overlay:
+                                - Used to indicate loading state visually
+                                - Not directly ARIA-annotated, but could be enhanced for accessibility
+                            -->
                         <div id="loadingSpinner" class="spinner-overlay" style="display:none;">
                                 <div class="spinner"></div>
                         </div>
                         <!-- Benchmark Results Template (hidden) -->
+                            <!--
+                                Benchmark Results Template:
+                                - Hidden template for dynamic insertion of benchmark results
+                                - Table structure for clear data presentation
+                            -->
                         <template id="benchmarkResultsTemplate">
                             <strong>Function Benchmark Results:</strong><br>
                             <table class="benchmark-table">

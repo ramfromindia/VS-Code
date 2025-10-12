@@ -1,4 +1,4 @@
-/* Cache indicator styling */
+/* Styles the cache indicator message shown to users when cached data is used */
 .cache-indicator {
 	display: block;
 	background: #ffe066;
@@ -13,10 +13,11 @@
 	animation: fadeInCache 0.7s forwards;
 }
 @keyframes fadeInCache {
+/* Animates the cache indicator fading in for better user feedback */
 	from { opacity: 0; }
 	to { opacity: 1; }
 }
-/* Spinner animation */
+/* Creates a circular loading spinner for indicating background processing */
 .spinner {
 	border: 6px solid #333;
 	border-top: 6px solid #fff;
@@ -27,16 +28,19 @@
 	margin: auto;
 }
 @keyframes spin {
+/* Rotates the spinner element for a continuous loading effect */
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
 body {
+/* Sets the global background, text color, and font for the dashboard */
 	background-color: var(--bg-color, #000);
 	color: var(--text-color, #fff);
 	font-family: system-ui, sans-serif;
 }
 
 .spinner-overlay {
+/* Centers and overlays the spinner above all content during loading */
 	position: fixed;
 	left: 50%;
 	top: 50%;
@@ -45,6 +49,7 @@ body {
 }
 
 /* Style for result container to handle large outputs efficiently */
+/* Contains analysis results, scrollable for large outputs */
 .result-container {
 	max-height: 300px;
 	overflow-y: auto;
@@ -58,7 +63,7 @@ body {
 	will-change: transform;
 }
 
-/* Professional button styling */
+/* Styles all buttons for a modern, accessible look */
 button {
 	background: #222;
 	color: #fff;
@@ -71,17 +76,20 @@ button {
 	transition: background 0.2s;
 }
 button:hover {
+/* Darkens button background on hover for interactivity */
 	background: #444;
 }
 .secondary-btn {
+/* Styles secondary action buttons with a distinct color */
 	background: #0057b8;
 	color: #fff;
 }
 .secondary-btn:hover {
+/* Darkens secondary button background on hover */
 	background: #003a75;
 }
 
-/* Sorted list styling */
+/* Displays sorted word frequency results, scrollable for large lists */
 .sorted-list {
 	max-height: 300px;
 	overflow-y: auto;
@@ -96,7 +104,7 @@ button:hover {
 	will-change: transform;
 }
 
-/* Benchmark results styling */
+/* Container for benchmark results, visually separated from other content */
 .benchmark-results {
 	margin-top: 16px;
 	border: 1px solid #ccc;
@@ -105,18 +113,22 @@ button:hover {
 	color: #222;
 }
 .benchmark-table {
+/* Styles the benchmark results table for clarity and readability */
 	width: 100%;
 	border-collapse: collapse;
 	margin-top: 8px;
 }
 .benchmark-table th, .benchmark-table td {
+/* Adds padding and bottom border to table cells */
 	padding: 4px;
 	border-bottom: 1px solid #eee;
 }
 .benchmark-table th {
+/* Styles table headers for emphasis */
 	text-align: left;
 	background: #eaeaea;
 }
 .benchmark-table td {
+/* Styles table data cells for contrast */
 	background: #fff;
 }
