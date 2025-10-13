@@ -1,3 +1,14 @@
+#progressBarContainer {
+	background: #e0e0e0;
+	border-radius: 4px;
+	overflow: hidden;
+}
+#progressBar {
+	height: 8px;
+	background: #2196f3;
+	width: 0%;
+	transition: width 0.3s;
+}
 /* Professional, optimized CSS for Text Length Dashboard */
 html {
 	box-sizing: border-box;
