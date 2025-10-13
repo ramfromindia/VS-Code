@@ -1,28 +1,38 @@
-// --- New Feature: Show Sorted Word Frequency List ---
-// Adds a button to display the sorted word frequency list in a styled div below the main result.
-// The sorted list is updated after each analysis and shown only when requested.
-
-// Project Description:
-// Text Analytics Dashboard
-// Build a web-based dashboard that allows users to input a block of text and receive various analytics and insights.
-// The dashboard should use array and string methods such as filter, map, reduce, split, join, slice, indexOf, includes, and more.
-//
-// Core Features:
-// - Word frequency analysis (most/least common words)
-// - Longest and shortest word detection
-// - Character count and analysis (vowels, consonants, digits, special characters)
-// - Sentence parsing and statistics (average sentence length, sentence count)
-// - Search functionality (find and highlight words/phrases)
-// - Text transformations (capitalize, reverse, remove duplicates, etc.)
-// - Data visualization (charts for word frequency, etc.)
-//
-// Requirements:
-// - Use vanilla JavaScript (no frameworks required)
-// - Interactive HTML interface (input area, buttons, results display)
-// - Modular functions for each analytic feature
-// - Professional CSS styling
-
-// No analysis count or limit needed; allow unlimited analyses for robust, social-media-style behavior
+/**
+ * Text Analytics Dashboard - Main JavaScript
+ *
+ * Major Functionalities:
+ *
+ * 1. Word Frequency Analysis:
+ *    - Processes input text to calculate word frequencies using a Web Worker for scalable performance.
+ *    - Supports large-scale data by chunking and merging results from the worker.
+ *    - Displays most and least frequent words, and detailed frequency output.
+ *
+ * 2. Sorted Word Frequency Output:
+ *    - Provides a sorted list of word frequencies (descending order) on user request.
+ *    - Uses caching to avoid redundant sorting and DOM updates.
+ *
+ * 3. Benchmarking Functions:
+ *    - Benchmarks analytic functions (e.g., word frequency, sanitization) and displays average execution time.
+ *    - Results are cached for repeated inputs to minimize overhead.
+ *
+ * 4. Accessibility & UI:
+ *    - Implements ARIA roles and labels for screen reader support.
+ *    - Keyboard accessibility for all major actions (Enter/Space triggers).
+ *
+ * 5. Caching & Performance:
+ *    - Caches analysis and sorted results for fast repeated access.
+ *    - Dynamically adjusts chunk size for optimal worker performance.
+ *
+ * 6. Modular Design:
+ *    - Functions are modular for maintainability and extensibility.
+ *    - DOM manipulation is minimal and batched for efficiency.
+ *
+ * 7. Error Handling:
+ *    - Handles worker errors gracefully and provides user feedback.
+ *
+ * For details on each feature, see function-level comments throughout the file.
+ */
 
 // Cache DOM elements for efficiency
 const myInputElem = document.getElementById(`myInput`);
