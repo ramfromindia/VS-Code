@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			};
 		}
 		// Map words to their lengths
-		const wordLengths = words.map(word => ({ word, length: word.length }));
+		const wordLengths = words.map((word) => {return ({ word, length: word.length });});
 		// Find max and min length
 		let maxLen = -Infinity, minLen = Infinity;
 		for (const { length } of wordLengths) {
@@ -34,8 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (length < minLen) minLen = length;
 		}
 		// Collect longest and shortest words
-		const longest = wordLengths.filter(w => w.length === maxLen).map(w => w.word);
-		const shortest = wordLengths.filter(w => w.length === minLen).map(w => w.word);
+		const longest = wordLengths.filter((w) => {return w.length === maxLen;}).map((w) =>{return w.word;});
+		const shortest = wordLengths.filter((w) => {return w.length === minLen;}).map((w) =>{return w.word;});
 		return { wordLengths, longest, shortest };
 	}
 
