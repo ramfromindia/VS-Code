@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Text Length Dashboard | Word Analysis Tool</title>
+	<meta name="description" content="Analyze your text for word lengths, longest and shortest words. Fast, robust, and optimized for large-scale data.">
+	<meta name="keywords" content="text analysis, word length, longest word, shortest word, SEO, dashboard">
+	<meta name="author" content="ramfromindia">
+	<link rel="stylesheet" href="Text_LENGTH_Dashboard.css">
+</head>
+<body>
+	<header>
+		<nav aria-label="Main Navigation">
+			<h1>Text Length Dashboard</h1>
+		</nav>
+	</header>
+	<main>
+		<section aria-labelledby="input-section-title">
+			<h2 id="input-section-title">Input Text</h2>
+			<form aria-label="Text Analysis Form" role="form" autocomplete="off" onsubmit="return false;">
+				<label for="inputText">Enter or paste your text below:</label>
+				<textarea id="inputText" name="inputText" placeholder="Enter or paste your text here..." rows="8" aria-required="true"></textarea>
+				<button id="analyzeBtn" type="button">Analyze</button>
+			</form>
+		</section>
+		<section aria-labelledby="results-section-title">
+			<h2 id="results-section-title">Results</h2>
+			<article id="results" aria-live="polite">
+				<section aria-labelledby="word-lengths-title">
+					<h3 id="word-lengths-title">Word Lengths</h3>
+					<div id="wordLengths"></div>
+				</section>
+				<section aria-labelledby="longest-words-title">
+					<h3 id="longest-words-title">Longest Word(s)</h3>
+					<div id="longestWords"></div>
+				</section>
+				<section aria-labelledby="shortest-words-title">
+					<h3 id="shortest-words-title">Shortest Word(s)</h3>
+					<div id="shortestWords"></div>
+				</section>
+			</article>
+		</section>
+	</main>
+	<footer>
+		<p>&copy; 2025 ramfromindia. All rights reserved.</p>
+	</footer>
+	<script src="Text_LENGTH_Dashboard.js"></script>
+</body>
+</html>
