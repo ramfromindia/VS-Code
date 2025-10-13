@@ -40,22 +40,48 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	function renderResults(results) {
-		// Word lengths table
+		// Clear previous results efficiently
+		wordLengthsDiv.textContent = '';
+		longestWordsDiv.textContent = '';
+		shortestWordsDiv.textContent = '';
+
 		if (results.wordLengths.length === 0) {
-			wordLengthsDiv.innerHTML = '<em>No words found.</em>';
-			longestWordsDiv.innerHTML = '';
-			shortestWordsDiv.innerHTML = '';
+			const noWordsMsg = document.createElement('em');
+			noWordsMsg.textContent = 'No words found.';
+			wordLengthsDiv.appendChild(noWordsMsg);
 			return;
 		}
-		let tableHtml = '<table><thead><tr><th>Word</th><th>Length</th></tr></thead><tbody>';
+
+		// Use DocumentFragment for efficient DOM updates
+		const table = document.createElement('table');
+		const thead = document.createElement('thead');
+		const headerRow = document.createElement('tr');
+		const thWord = document.createElement('th');
+		thWord.textContent = 'Word';
+		const thLength = document.createElement('th');
+		thLength.textContent = 'Length';
+		headerRow.appendChild(thWord);
+		headerRow.appendChild(thLength);
+		thead.appendChild(headerRow);
+		table.appendChild(thead);
+
+		const tbody = document.createElement('tbody');
+		const frag = document.createDocumentFragment();
 		for (const { word, length } of results.wordLengths) {
-			tableHtml += `<tr><td>${word}</td><td>${length}</td></tr>`;
+			const row = document.createElement('tr');
+			const tdWord = document.createElement('td');
+			tdWord.textContent = word;
+			const tdLength = document.createElement('td');
+			tdLength.textContent = length;
+			row.appendChild(tdWord);
+			row.appendChild(tdLength);
+			frag.appendChild(row);
 		}
-		tableHtml += '</tbody></table>';
-		wordLengthsDiv.innerHTML = tableHtml;
-		// Longest words
+		tbody.appendChild(frag);
+		table.appendChild(tbody);
+		wordLengthsDiv.appendChild(table);
+
 		longestWordsDiv.textContent = results.longest.join(', ');
-		// Shortest words
 		shortestWordsDiv.textContent = results.shortest.join(', ');
 	}
 
