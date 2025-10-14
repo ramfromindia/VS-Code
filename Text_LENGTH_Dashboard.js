@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		table.appendChild(tbody);
 		wordLengthsDiv.appendChild(table);
 
-	longestWordsDiv.textContent = results.longest.map(w => typeof w === 'object' ? w.word : w).join(', ');
-	shortestWordsDiv.textContent = results.shortest.map(w => typeof w === 'object' ? w.word : w).join(', ');
+		longestWordsDiv.textContent = results.longest.join(', ');
+		shortestWordsDiv.textContent = results.shortest.join(', ');
 	}
 
 	let aggregate = {
