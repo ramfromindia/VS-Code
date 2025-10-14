@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Length Dashboard</title>
+    <link rel="stylesheet" href="Text_LENGTH_Dashboard.css">
+</head>
+<body>
+    <h1>Word Length Analyzer</h1>
+    <textarea id="inputText" rows="6" cols="60" placeholder="Enter your text here..."></textarea><br>
+    <button onclick="analyzeWordLengths()">Analyze Word Lengths</button>
+    <div id="results">
+    <h2>Words with Lengths</h2>
+    <div id="wordLengths"></div>
+    <h3>Word(s) With Highest Length</h3>
+    <div id="mostCommonWords"></div>
+    <h3>Word(s) With Lowest Length</h3>
+    <div id="leastCommonWords"></div>
+    </div>
+    <script src="Text_LENGTH_Dashboard.js"></script>
+</body>
+</html>
