@@ -3,28 +3,37 @@
 
 function analyzeWordLengths() {
     const input = document.getElementById('inputText').value;
-    // Split input into words (alphanumeric, ignore punctuation)
     const words = input.match(/\b\w+\b/g) || [];
-    // Display each word with its length
-    const wordLengthPairs = words.map(word => `${word} (${word.length})`);
-    document.getElementById('wordLengths').textContent = wordLengthPairs.length ? wordLengthPairs.join(', ') : 'No words found.';
+    if (!words.length) {
+        document.getElementById('wordLengths').textContent = 'No words found.';
+        document.getElementById('mostCommonWords').textContent = 'N/A';
+        document.getElementById('leastCommonWords').textContent = 'N/A';
+        return;
+    }
 
-    // Find highest and lowest word lengths
-    let maxLen = 0, minLen = Infinity;
-    words.forEach(word => {
-        if (word.length > maxLen) maxLen = word.length;
-        if (word.length < minLen) minLen = word.length;
-    });
+    let minLen = Infinity, maxLen = 0;
+    let minWords = [], maxWords = [];
+    let wordLengthsStr = '';
 
-    // Words with highest length
-    const mostCommonWords = words.filter(word => word.length === maxLen);
-    const mostCommonWordsPairs = mostCommonWords.map(word => `${word} (${word.length})`);
-    document.getElementById('mostCommonWords').textContent = mostCommonWordsPairs.length ? mostCommonWordsPairs.join(', ') : 'N/A';
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        const len = word.length;
+        wordLengthsStr += `${word} (${len})${i < words.length - 1 ? ', ' : ''}`;
+        if (len > maxLen) {
+            maxLen = len;
+            maxWords = [word];
+        } else if (len === maxLen) {
+            maxWords.push(word);
+        }
+        if (len < minLen) {
+            minLen = len;
+            minWords = [word];
+        } else if (len === minLen) {
+            minWords.push(word);
+        }
+    }
 
-    // Words with lowest length
-    const leastCommonWords = words.filter(word => word.length === minLen);
-    const leastCommonWordsPairs = leastCommonWords.map(word => `${word} (${word.length})`);
-    document.getElementById('leastCommonWords').textContent = leastCommonWordsPairs.length ? leastCommonWordsPairs.join(', ') : 'N/A';
-
-    // ...existing code...
+    document.getElementById('wordLengths').textContent = wordLengthsStr;
+    document.getElementById('mostCommonWords').textContent = maxWords.map(w => `${w} (${maxLen})`).join(', ');
+    document.getElementById('leastCommonWords').textContent = minWords.map(w => `${w} (${minLen})`).join(', ');
 }
