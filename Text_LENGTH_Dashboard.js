@@ -16,22 +16,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	const longestWordsDiv = document.getElementById('longestWords');
 	const shortestWordsDiv = document.getElementById('shortestWords');
 
+	// Create the Web Worker
 	let worker;
 	if (window.Worker) {
 		worker = new Worker('textLengthWorker.js');
 	} else {
 		alert('Web Workers are not supported in your browser.');
 		return;
-	}
-
-	const CHUNK_SIZE = 50000; // characters per chunk, tune as needed
-
-	function chunkText(text, size) {
-		const chunks = [];
-		for (let i = 0; i < text.length; i += size) {
-			chunks.push(text.slice(i, i + size));
-		}
-		return chunks;
 	}
 
 	function renderResults(results) {
@@ -78,55 +69,12 @@ document.addEventListener('DOMContentLoaded', function () {
 		shortestWordsDiv.textContent = results.shortest.join(', ');
 	}
 
-	let aggregate = {
-		wordLengths: [],
-		longest: [],
-		shortest: []
-	};
-	let chunksExpected = 0;
-	let chunksReceived = 0;
-
 	worker.onmessage = function(e) {
-		const partial = e.data;
-		chunksReceived++;
-		aggregate.wordLengths = aggregate.wordLengths.concat(partial.wordLengths);
-		// Update longest/shortest aggregation
-		if (partial.longest.length > 0) {
-			const maxLen = Math.max(...partial.longest.map(w => w.length));
-			if (!aggregate.longest.length || maxLen > aggregate.longest[0].length) {
-				aggregate.longest = partial.longest.map(w => w);
-			} else if (maxLen === aggregate.longest[0].length) {
-				aggregate.longest = aggregate.longest.concat(partial.longest);
-			}
-		}
-		if (partial.shortest.length > 0) {
-			const minLen = Math.min(...partial.shortest.map(w => w.length));
-			if (!aggregate.shortest.length || minLen < aggregate.shortest[0].length) {
-				aggregate.shortest = partial.shortest.map(w => w);
-			} else if (minLen === aggregate.shortest[0].length) {
-				aggregate.shortest = aggregate.shortest.concat(partial.shortest);
-			}
-		}
-		if (chunksReceived === chunksExpected) {
-			// Remove duplicates for longest/shortest
-			aggregate.longest = [...new Set(aggregate.longest)];
-			aggregate.shortest = [...new Set(aggregate.shortest)];
-			renderResults(aggregate);
-		}
+		renderResults(e.data);
 	};
 
 	analyzeBtn.addEventListener('click', function () {
 		const text = inputText.value;
-		const chunks = chunkText(text, CHUNK_SIZE);
-		aggregate = { wordLengths: [], longest: [], shortest: [] };
-		chunksExpected = chunks.length;
-		chunksReceived = 0;
-		if (chunksExpected === 0) {
-			renderResults(aggregate);
-			return;
-		}
-		for (const chunk of chunks) {
-			worker.postMessage(chunk);
-		}
+		worker.postMessage(text);
 	});
 })
