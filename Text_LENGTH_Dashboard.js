@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	const wordLengthsDiv = document.getElementById('wordLengths');
 	const longestWordsDiv = document.getElementById('longestWords');
 	const shortestWordsDiv = document.getElementById('shortestWords');
-	const progressBarContainer = document.getElementById('progressBarContainer');
-	const progressBar = document.getElementById('progressBar');
 
 	let worker;
 	if (window.Worker) {
@@ -109,16 +107,10 @@ document.addEventListener('DOMContentLoaded', function () {
 				aggregate.shortest = aggregate.shortest.concat(partial.shortest);
 			}
 		}
-		if (chunksExpected > 0) {
-			const percent = Math.round((chunksReceived / chunksExpected) * 100);
-			progressBar.style.width = percent + '%';
-		}
 		if (chunksReceived === chunksExpected) {
 			// Remove duplicates for longest/shortest
 			aggregate.longest = [...new Set(aggregate.longest)];
 			aggregate.shortest = [...new Set(aggregate.shortest)];
-			progressBarContainer.style.display = 'none';
-			progressBar.style.width = '0%';
 			renderResults(aggregate);
 		}
 	};
@@ -129,13 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
 		aggregate = { wordLengths: [], longest: [], shortest: [] };
 		chunksExpected = chunks.length;
 		chunksReceived = 0;
-		progressBar.style.width = '0%';
 		if (chunksExpected === 0) {
-			progressBarContainer.style.display = 'none';
 			renderResults(aggregate);
 			return;
 		}
-		progressBarContainer.style.display = 'block';
 		for (const chunk of chunks) {
 			worker.postMessage(chunk);
 		}
