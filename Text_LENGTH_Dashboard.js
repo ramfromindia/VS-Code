@@ -19,11 +19,12 @@ function analyzeWordLengths() {
     let minLen = Infinity, maxLen = 0;
     let minWords = [], maxWords = [];
     let wordLengthsStr = '';
+	const wordsLength = words.length;
 
-    for (let i = 0; i < words.length; i++) {
+    for (let i = 0; i < wordsLength; i++) {
         const word = words[i];
         const len = word.length;
-        wordLengthsStr += `${word} (${len})${i < words.length - 1 ? ', ' : ''}`;
+        wordLengthsStr += `${word} (${len})${i < wordsLength - 1 ? ', ' : ''}`;
         if (len > maxLen) {
             maxLen = len;
             maxWords = [word];
