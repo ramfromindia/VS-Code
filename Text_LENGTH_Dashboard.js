@@ -1,13 +1,18 @@
     const analyzeBtn = document.getElementById('analyzeBtn');
     analyzeBtn.addEventListener('click', analyzeWordLengths);
+	const wordLengthsEl = document.getElementById('wordLengths');
+    const mostCommonWordsEl = document.getElementById('mostCommonWords');
+    const leastCommonWordsEl = document.getElementById('leastCommonWords');
+
 
 function analyzeWordLengths() {
     const input = document.getElementById('inputText').value;
+
     const words = input.match(/\b\w+\b/g) || [];
     if (!words.length) {
-        document.getElementById('wordLengths').textContent = 'No words found.';
-        document.getElementById('mostCommonWords').textContent = 'N/A';
-        document.getElementById('leastCommonWords').textContent = 'N/A';
+        wordLengthsEl.textContent = 'No words found.';
+        mostCommonWordsEl.textContent = 'N/A';
+        leastCommonWordsEl.textContent = 'N/A';
         return;
     }
 
@@ -33,7 +38,7 @@ function analyzeWordLengths() {
         }
     }
 
-    document.getElementById('wordLengths').textContent = wordLengthsStr;
-    document.getElementById('mostCommonWords').textContent = maxWords.map(w => `${w} (${maxLen})`).join(', ');
-    document.getElementById('leastCommonWords').textContent = minWords.map(w => `${w} (${minLen})`).join(', ');
+    wordLengthsEl.textContent = wordLengthsStr;
+    mostCommonWordsEl.textContent = maxWords.map(w => `${w} (${maxLen})`).join(', ');
+    leastCommonWordsEl.textContent = minWords.map(w => `${w} (${minLen})`).join(', ');
 }
