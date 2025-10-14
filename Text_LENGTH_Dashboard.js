@@ -1,3 +1,6 @@
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    analyzeBtn.addEventListener('click', analyzeWordLengths);
+
 function analyzeWordLengths() {
     const input = document.getElementById('inputText').value;
     // Split input into words (alphanumeric, ignore punctuation)
