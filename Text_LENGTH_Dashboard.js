@@ -40,6 +40,6 @@ function analyzeWordLengths() {
     }
 
     wordLengthsEl.textContent = wordLengthsStr;
-    mostCommonWordsEl.textContent = maxWords.map(w => `${w} (${maxLen})`).join(', ');
-    leastCommonWordsEl.textContent = minWords.map(w => `${w} (${minLen})`).join(', ');
+    mostCommonWordsEl.textContent = maxWords.map((w) =>{return `${w} (${maxLen})`}).join(', ');
+    leastCommonWordsEl.textContent = minWords.map((w) =>{return `${w} (${minLen})`}).join(', ');
 }
