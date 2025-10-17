@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Emoji Test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 120px; font-size: 18px; }
+    pre { background:#f7f7f8; padding:12px; border-radius:6px; }
+    .row { display:flex; gap:12px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h1>Emoji / Unicode Test</h1>
+  <p>Paste text with emoji and run the checks. This page shows whether your engine supports Unicode property escapes, how regex matches behave, and character counts (code units, code points, graphemes).</p>
+
+  <textarea id="input">Hello 👋🏽! Family: 👩‍👩‍👦‍👦, Flags: 🇺🇸🇮🇳, combined: 👨‍⚕️, accented: naïve café</textarea>
+
+  <div class="row">
+    <button id="run">Run tests</button>
+    <button id="reset">Reset sample</button>
+  </div>
+
+  <h2>Results</h2>
+  <pre id="out">(no results yet)</pre>
+
+  <script>
+    const out = document.getElementById('out');
+    const inputEl = document.getElementById('input');
+    const run = document.getElementById('run');
+    const reset = document.getElementById('reset');
+
+    function safeFeatureTest() {
+      try {
+        new RegExp("\\p{L}", "u");
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function matchesWithRegex(text, useUnicode) {
+      try {
+        const pattern = useUnicode
+          ? /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu
+          : /[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g;
+        return text.match(pattern) || [];
+      } catch (e) {
+        return ['(regex threw)'];
+      }
+    }
+
+    function countCodeUnits(s) { return s.length; }
+    function countCodePoints(s) { return Array.from(s).length; }
+    function countGraphemes(s) {
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+        return [...seg.segment(s)].length;
+      }
+      // Fallback: approximate by code points
+      return Array.from(s).length;
+    }
+
+    function runTests() {
+      const text = inputEl.value;
+      const feature = safeFeatureTest();
+      const matchesUnicode = matchesWithRegex(text, true);
+      const matchesAscii = matchesWithRegex(text, false);
+
+      let sample = text;
+      if (sample.length > 200) sample = sample.slice(0,200) + '...';
+
+      const lines = [];
+      lines.push('Engine supports Unicode property escapes (\u005Cp{...}): ' + feature);
+      lines.push('Sample text (truncated): ' + JSON.stringify(sample));
+      lines.push('Matches (Unicode-aware pattern): ' + JSON.stringify(matchesUnicode));
+      lines.push('Matches (ASCII fallback pattern): ' + JSON.stringify(matchesAscii));
+
+      // Show counts for each code point / grapheme in sample
+      const tokens = matchesUnicode.length ? matchesUnicode : (matchesAscii.length ? matchesAscii : []);
+      if (tokens.length) {
+        lines.push('\nToken statistics:');
+        tokens.slice(0, 50).forEach(function(tok, i) {
+          lines.push(`${i+1}. ${tok} — code units: ${countCodeUnits(tok)}, code points: ${countCodePoints(tok)}, graphemes: ${countGraphemes(tok)}`);
+        });
+      }
+
+      // Show per-character breakdown for first token
+      if (tokens.length > 0) {
+        const first = tokens[0];
+        lines.push('\nFirst token breakdown:');
+        lines.push('Raw: ' + first);
+        lines.push('Code units: ' + JSON.stringify(first.split('').map(c => c.codePointAt(0).toString(16))));
+        lines.push('Code points (Array.from): ' + JSON.stringify(Array.from(first).map(c => c.codePointAt(0).toString(16))));
+      }
+
+      out.textContent = lines.join('\n');
+    }
+
+    run.addEventListener('click', runTests);
+    reset.addEventListener('click', function() { inputEl.value = 'Hello 👋🏽! Family: 👩‍👩‍👦‍👦, Flags: 🇺🇸🇮🇳, combined: 👨‍⚕️, accented: naïve café'; out.textContent='(no results yet)'; });
+
+    // run on load
+    runTests();
+  </script>
+</body>
+</html>
