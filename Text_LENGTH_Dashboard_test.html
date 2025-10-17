@@ -20,8 +20,10 @@
 
   <section>
     <label for="inputText"><strong>Input (editable):</strong></label><br>
-    <textarea id="inputText" rows="3" cols="80"></textarea><br>
-    <button id="analyzeBtn_manual">Analyze (manual)</button>
+  <textarea id="inputText" rows="3" cols="80"></textarea><br>
+  <button id="analyzeBtn_manual">Analyze (manual)</button>
+  <!-- Hidden button with the id the dashboard script expects so it can attach its listener -->
+  <button id="analyzeBtn" style="display:none" aria-hidden="true"></button>
     <div style="margin-top:12px">
       <div><strong>wordLengths:</strong> <span id="wordLengths"></span></div>
       <div><strong>mostCommonWords:</strong> <span id="mostCommonWords"></span></div>

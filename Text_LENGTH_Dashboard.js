@@ -11,10 +11,21 @@ function analyzeWordLengths() {
     // Normalize typographic apostrophes to straight ASCII apostrophe
     input = input.replace(/[’‘]/g, "'");
 
-    // Unicode-aware pattern: match letters or numbers (Unicode),
-    // allowing internal hyphens or apostrophes (e.g., don't, well-being).
-    // The 'u' flag ensures \p{L} and \p{N} work correctly.
-    const wordPattern = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
+    // Build a word pattern. Prefer Unicode property escapes if supported,
+    // otherwise fall back to an ASCII-safe pattern to avoid runtime SyntaxError
+    // on older browsers (older Edge/IE). The fallback supports letters/digits
+    // in the ASCII range and still preserves internal hyphens/apostrophes.
+    let wordPattern;
+    try {
+        // Test whether the environment supports \p{L} in RegExp (Unicode property escapes)
+        new RegExp("\\p{L}", "u");
+        wordPattern = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
+    } catch (e) {
+        // Fallback for environments without Unicode property escape support.
+        // Note: fallback won't match non-Latin scripts correctly, but avoids
+        // a hard crash and keeps functionality for ASCII, apostrophes, and hyphens.
+        wordPattern = /[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g;
+    }
     const words = input.match(wordPattern) || [];
     if (!words.length) {
         wordLengthsEl.textContent = 'No words found.';
