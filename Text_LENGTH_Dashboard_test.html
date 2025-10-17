@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Text_LENGTH_Dashboard — Test Harness</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    textarea { width: 100%; max-width: 800px; }
+    table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+    th, td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }
+    pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+    .pass { background: #dff0d8; }
+    .fail { background: #f2dede; }
+    .mono { font-family: Consolas, monospace; }
+    button.run { padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <h1>Text_LENGTH_Dashboard — Test Harness</h1>
+
+  <section>
+    <label for="inputText"><strong>Input (editable):</strong></label><br>
+    <textarea id="inputText" rows="3" cols="80"></textarea><br>
+    <button id="analyzeBtn_manual">Analyze (manual)</button>
+    <div style="margin-top:12px">
+      <div><strong>wordLengths:</strong> <span id="wordLengths"></span></div>
+      <div><strong>mostCommonWords:</strong> <span id="mostCommonWords"></span></div>
+      <div><strong>leastCommonWords:</strong> <span id="leastCommonWords"></span></div>
+    </div>
+  </section>
+
+  <hr>
+
+  <h2>Automated tests</h2>
+  <p>Run any test or click <em>Run All</em> to execute all tests. Expected values are computed to match the current logic in <code>Text_LENGTH_Dashboard.js</code>.</p>
+  <button id="runAll">Run All</button>
+  <table id="testsTable">
+    <thead>
+      <tr><th>#</th><th>Case</th><th>Input</th><th>Expected</th><th>Actual</th><th>Result</th><th>Run</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Load the dashboard script (must come after the DOM elements above) -->
+  <script src="Text_LENGTH_Dashboard.js"></script>
+
+  <script>
+    // Representative test cases and expected outputs (match logic in Text_LENGTH_Dashboard.js)
+    const tests = [
+      {
+        id: 1,
+        label: "Apostrophes & hyphens",
+        input: "don't well-being coöperate naïve café",
+        expected: {
+          wordLengths: "don't (5), well-being (10), coöperate (9), naïve (5), café (4)",
+          mostCommon: "well-being (10)",
+          leastCommon: "café (4)"
+        }
+      },
+      {
+        id: 2,
+        label: "Curly quotes and apostrophes",
+        input: "‘single’ “quotes” don’t",
+        // curly apostrophe in don’t will be normalized to don't by the script
+        expected: {
+          wordLengths: "single (6), quotes (6), don't (5)",
+          mostCommon: "single (6), quotes (6)",
+          leastCommon: "don't (5)"
+        }
+      },
+      {
+        id: 3,
+        label: "Cyrillic (non-Latin)",
+        input: "Привет мир",
+        expected: {
+          wordLengths: "Привет (6), мир (3)",
+          mostCommon: "Привет (6)",
+          leastCommon: "мир (3)"
+        }
+      },
+      {
+        id: 4,
+        label: "Numbers",
+        input: "123 4567 89",
+        expected: {
+          wordLengths: "123 (3), 4567 (4), 89 (2)",
+          mostCommon: "4567 (4)",
+          leastCommon: "89 (2)"
+        }
+      },
+      {
+        id: 5,
+        label: "Emoji ignored by tokenizer",
+        input: "emoji 😊👍 test",
+        expected: {
+          wordLengths: "emoji (5), test (4)",
+          mostCommon: "emoji (5)",
+          leastCommon: "test (4)"
+        }
+      },
+      {
+        id: 6,
+        label: "Only punctuation",
+        input: "— ... !!!",
+        expected: {
+          wordLengths: "No words found.",
+          mostCommon: "N/A",
+          leastCommon: "N/A"
+        }
+      },
+      {
+        id: 7,
+        label: "Empty input",
+        input: "",
+        expected: {
+          wordLengths: "No words found.",
+          mostCommon: "N/A",
+          leastCommon: "N/A"
+        }
+      },
+      {
+        id: 8,
+        label: "Duplicates and dedupe",
+        input: "repeat repeat longword longword",
+        expected: {
+          wordLengths: "repeat (6), repeat (6), longword (8), longword (8)",
+          mostCommon: "longword (8)",
+          leastCommon: "repeat (6)"
+        }
+      }
+    ];
+
+    const tbody = document.querySelector('#testsTable tbody');
+
+    function createRow(test, index) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td class="mono">${escapeHtml(test.label)}</td>
+        <td><pre>${escapeHtml(test.input)}</pre></td>
+        <td class="expected"><pre>${escapeHtml(formatExpected(test.expected))}</pre></td>
+        <td class="actual"><pre id="actual-${index}"></pre></td>
+        <td class="result" id="result-${index}"></td>
+        <td><button class="run" data-index="${index}">Run</button></td>
+      `;
+      return tr;
+    }
+
+    function formatExpected(exp) {
+      if (exp.wordLengths === 'No words found.') return `wordLengths: No words found.\nmostCommonWords: N/A\nleastCommonWords: N/A`;
+      return `wordLengths: ${exp.wordLengths}\nmostCommonWords: ${exp.mostCommon}\nleastCommonWords: ${exp.leastCommon}`;
+    }
+
+    function escapeHtml(s) {
+      return (s+'').replace(/[&<>\"']/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
+    }
+
+    // Build table rows
+    tests.forEach((t, i) => {
+      tbody.appendChild(createRow(t, i));
+    });
+
+    // Attach per-row run handlers
+    tbody.addEventListener('click', function(e){
+      const btn = e.target.closest('button.run');
+      if (!btn) return;
+      const idx = Number(btn.getAttribute('data-index'));
+      runTest(idx);
+    });
+
+    document.getElementById('runAll').addEventListener('click', function(){
+      runAll();
+    });
+
+    // Manual analyze button (calls the same function as the dashboard script expects)
+    document.getElementById('analyzeBtn_manual').addEventListener('click', function(){
+      // copy textarea into the real input expected by the dashboard if IDs differ
+      // The dashboard already uses #inputText, so just call the function
+      if (typeof analyzeWordLengths === 'function') {
+        analyzeWordLengths();
+      } else {
+        alert('analyzeWordLengths() not loaded');
+      }
+    });
+
+    function runTest(index) {
+      const t = tests[index];
+      const inputEl = document.getElementById('inputText');
+      inputEl.value = t.input;
+
+      // Call dashboard function
+      if (typeof analyzeWordLengths === 'function') {
+        analyzeWordLengths();
+      } else {
+        document.getElementById(`actual-${index}`).textContent = 'analyzeWordLengths() not found';
+        document.getElementById(`result-${index}`).textContent = 'ERROR';
+        document.getElementById(`result-${index}`).className = 'fail';
+        return;
+      }
+
+      // Read actual outputs from the elements the dashboard writes to
+      const actualWordLengths = document.getElementById('wordLengths').textContent;
+      const actualMost = document.getElementById('mostCommonWords').textContent;
+      const actualLeast = document.getElementById('leastCommonWords').textContent;
+
+      const actualSummary = `wordLengths: ${actualWordLengths}\nmostCommonWords: ${actualMost}\nleastCommonWords: ${actualLeast}`;
+      document.getElementById(`actual-${index}`).textContent = actualSummary;
+
+      // Compare to expected (string-equality)
+      const expected = t.expected;
+      let pass = false;
+      if (expected.wordLengths === 'No words found.') {
+        pass = actualWordLengths === 'No words found.' && actualMost === 'N/A' && actualLeast === 'N/A';
+      } else {
+        pass = actualWordLengths === expected.wordLengths && actualMost === expected.mostCommon && actualLeast === expected.leastCommon;
+      }
+
+      const resultCell = document.getElementById(`result-${index}`);
+      resultCell.textContent = pass ? 'PASS' : 'FAIL';
+      resultCell.className = pass ? 'pass' : 'fail';
+    }
+
+    function runAll() {
+      // run synchronously; tests are synchronous
+      tests.forEach((_, i) => runTest(i));
+    }
+
+    // Expose runAll to console for convenience
+    window.__testHarness = { runAll };
+  </script>
+</body>
+</html>
