@@ -17,8 +17,12 @@ function analyzeWordLengths() {
     // in the ASCII range and still preserves internal hyphens/apostrophes.
     let wordPattern;
     try {
-        // Test whether the environment supports \p{L} in RegExp (Unicode property escapes)
-        new RegExp("\\p{L}", "u");
+    // Test whether the environment supports \p{L} in RegExp (Unicode property escapes).
+    // Construct the regex using the string form so the parser doesn't see an unsupported
+    // \p escape at parse-time. Using a literal like /\p{L}/u would cause a SyntaxError
+    // on older engines that don't support Unicode property escapes, so we build it at
+    // runtime: if this throws, the engine lacks \p support and we fall back to ASCII.
+    new RegExp("\\p{L}", "u");
         wordPattern = /[\p{L}\p{N}]+(?:['-][\p{L}\p{N}]+)*/gu;
     } catch (e) {
         // Fallback for environments without Unicode property escape support.
