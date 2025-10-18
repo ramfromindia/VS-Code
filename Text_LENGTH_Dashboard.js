@@ -1,8 +1,12 @@
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    analyzeBtn.addEventListener('click', analyzeWordLengths);
-    const wordLengthsEl = document.getElementById('wordLengths');
-    const mostCommonWordsEl = document.getElementById('mostCommonWords');
-    const leastCommonWordsEl = document.getElementById('leastCommonWords');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const form = document.getElementById('analyzeForm');
+const wordLengthsEl = document.getElementById('wordLengths'); // now a <ul>
+const mostCommonWordsEl = document.getElementById('mostCommonWords'); // role=status
+const leastCommonWordsEl = document.getElementById('leastCommonWords'); // role=status
+
+// Wire events: support both button click and form submit for progressive enhancement
+if (analyzeBtn) analyzeBtn.addEventListener('click', analyzeWordLengths);
+if (form) form.addEventListener('submit', function (e) { e.preventDefault(); analyzeWordLengths(); });
 
 
 function analyzeWordLengths() {
@@ -31,10 +35,11 @@ function analyzeWordLengths() {
         wordPattern = /[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g;
     }
     const words = input.match(wordPattern) || [];
+    // Clear previous results
+    clearResults();
+
     if (!words.length) {
-        wordLengthsEl.textContent = 'No words found.';
-        mostCommonWordsEl.textContent = 'N/A';
-        leastCommonWordsEl.textContent = 'N/A';
+        renderNoWordsFound();
         return;
     }
 
@@ -44,10 +49,15 @@ function analyzeWordLengths() {
 	const wordsLength = words.length;
 
     for (let i = 0; i < wordsLength; i++) {
-    const word = words[i];
-    // Count Unicode code points so characters like emoji are counted as one
-    const len = Array.from(word).length;
-        wordLengthsStr += `${word} (${len})${i < wordsLength - 1 ? ', ' : ''}`;
+        const word = words[i];
+        // Count Unicode code points so characters like emoji are counted as one
+        const len = Array.from(word).length;
+
+        // Build list item for the <ul>
+        const li = document.createElement('li');
+        li.textContent = `${word} (${len})`;
+        wordLengthsEl.appendChild(li);
+
         if (len > maxLen) {
             maxLen = len;
             maxWords = [word];
@@ -62,12 +72,30 @@ function analyzeWordLengths() {
         }
     }
 
-    wordLengthsEl.textContent = wordLengthsStr;
-
     // Deduplicate words while preserving first-seen order
     const uniqueMax = [...new Set(maxWords)];
     const uniqueMin = [...new Set(minWords)];
 
-    mostCommonWordsEl.textContent = uniqueMax.map(function(w){ return `${w} (${maxLen})`; }).join(', ');
-    leastCommonWordsEl.textContent = uniqueMin.map(function(w){ return `${w} (${minLen})`; }).join(', ');
+    // Update status regions (role=status + aria-live will announce changes)
+    mostCommonWordsEl.textContent = uniqueMax.map(function (w) { return `${w} (${maxLen})`; }).join(', ');
+    leastCommonWordsEl.textContent = uniqueMin.map(function (w) { return `${w} (${minLen})`; }).join(', ');
+}
+
+function clearResults() {
+    // Clear list items and status text safely
+    if (wordLengthsEl) {
+        while (wordLengthsEl.firstChild) wordLengthsEl.removeChild(wordLengthsEl.firstChild);
+    }
+    if (mostCommonWordsEl) mostCommonWordsEl.textContent = '';
+    if (leastCommonWordsEl) leastCommonWordsEl.textContent = '';
+}
+
+function renderNoWordsFound() {
+    if (wordLengthsEl) {
+        const li = document.createElement('li');
+        li.textContent = 'No words found.';
+        wordLengthsEl.appendChild(li);
+    }
+    if (mostCommonWordsEl) mostCommonWordsEl.textContent = 'N/A';
+    if (leastCommonWordsEl) leastCommonWordsEl.textContent = 'N/A';
 }
