@@ -3,21 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Length Dashboard</title>
+    <title>Word Length Analyzer — Text Length Dashboard</title>
+    <meta name="description" content="Analyze word lengths in text, find the longest and shortest words, and view detailed word-length lists with an accessible, semantic interface.">
+    <meta name="keywords" content="word length, text analysis, word frequency, accessibility, SEO, JavaScript">
+    <meta name="author" content="ramfromindia">
+    <link rel="canonical" href="./Text_LENGTH_Dashboard.html">
     <link rel="stylesheet" href="Text_LENGTH_Dashboard.css">
 </head>
 <body>
-    <h1>Word Length Analyzer</h1>
-    <textarea id="inputText" rows="6" cols="60" placeholder="Enter your text here..."></textarea><br>
-    <button id="analyzeBtn">Analyze Word Lengths</button>
-    <div id="results">
-    <h2>Words with Lengths</h2>
-    <div id="wordLengths"></div>
-    <h3>Word(s) With Highest Length</h3>
-    <div id="mostCommonWords"></div>
-    <h3>Word(s) With Lowest Length</h3>
-    <div id="leastCommonWords"></div>
-    </div>
+    <header>
+        <h1>Word Length Analyzer</h1>
+        <p class="sr-only">Analyze word lengths, find longest and shortest words, and view detailed results. Accessible and semantic.</p>
+    </header>
+
+    <main>
+        <article aria-labelledby="app-heading">
+            <h2 id="app-heading" class="visually-hidden">Text Length Analysis Application</h2>
+
+            <form id="analyzeForm" onsubmit="event.preventDefault(); document.getElementById('analyzeBtn').click();" aria-describedby="instructions">
+                <div id="instructions" class="visually-hidden">Type or paste text into the textarea and press Analyze.</div>
+                <label for="inputText">Enter text to analyze</label><br>
+                <textarea id="inputText" name="inputText" rows="6" cols="60" placeholder="Enter your text here..." aria-required="true"></textarea><br>
+                <button id="analyzeBtn" type="button">Analyze Word Lengths</button>
+            </form>
+
+            <section id="results" aria-labelledby="results-heading">
+                <h2 id="results-heading">Results</h2>
+
+                <section aria-labelledby="word-lengths-heading">
+                    <h3 id="word-lengths-heading">Words with Lengths</h3>
+                    <ul id="wordLengths" aria-live="polite"></ul>
+                </section>
+
+                <section aria-labelledby="highest-heading">
+                    <h3 id="highest-heading">Word(s) With Highest Length</h3>
+                    <div id="mostCommonWords" role="status" aria-live="polite">No data yet.</div>
+                </section>
+
+                <section aria-labelledby="lowest-heading">
+                    <h3 id="lowest-heading">Word(s) With Lowest Length</h3>
+                    <div id="leastCommonWords" role="status" aria-live="polite">No data yet.</div>
+                </section>
+            </section>
+        </article>
+    </main>
+
+    <footer>
+        <p>Built by ramfromindia — <small>Accessible, semantic markup</small></p>
+    </footer>
     <script src="Text_LENGTH_Dashboard.js"></script>
 </body>
 </html>
